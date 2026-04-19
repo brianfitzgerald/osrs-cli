@@ -1,15 +1,9 @@
 # osrs-cli
 
-A tiny CLI for querying Old School RuneScape player data via the
-[Wise Old Man](https://docs.wiseoldman.net/api) API.
+A CLI for querying Old School RuneScape player data via the
+[Wise Old Man](https://docs.wiseoldman.net/api) and [WikiSync](https://sync.runescape.wiki/) APIs.
 
-## Install
-
-```sh
-uv sync
-```
-
-Run with `uv run osrs-cli ...` (or activate the venv and use `osrs-cli`).
+Designed to be used with LLMs / agent harnesses.
 
 ## Commands
 
@@ -25,7 +19,7 @@ Run with `uv run osrs-cli ...` (or activate the venv and use `osrs-cli`).
 > **Quests note:** the OSRS hiscores don't expose quest completion, so Wise Old
 > Man can't provide it. `quests` instead hits
 > [WikiSync](https://sync.runescape.wiki/) (`sync.runescape.wiki`), which is fed
-> by the community-run RuneLite **WikiSync** plugin. A player must have run the
+> by the RuneLite WikiSync plugin. A player must have run the
 > plugin at least once for data to exist.
 
 ### Flags (query commands)
@@ -49,9 +43,4 @@ uv run osrs-cli player Cyberduck242 --force
 uv run osrs-cli clear-cache
 ```
 
-## Caching and rate limiting
-
-- Responses are cached under `~/.cache/osrs-cli/` for 5 minutes by default.
-- A sliding-window limiter enforces the public WOM limit of **20 requests per
-  60 seconds**. When the limit is hit, the CLI exits with a message telling you
-  how many seconds to wait — cached reads are still free.
+Responses are cached under `~/.cache/osrs-cli/` for 5 minutes by default.
