@@ -57,3 +57,43 @@ def test_render_quests_uses_ascii_markers(capture_console):
     cli._render_quests(QUEST_FIXTURE, status="all")
     out = capture_console.getvalue()
     assert "[x]" in out and "[~]" in out and "[ ]" in out
+
+
+def test_requirements_command_renders_all_sections(capture_console, mocker):
+    mocker.patch(
+        "osrs_cli.api.get_quest_requirements",
+        return_value={
+            "quest": "While Guthix Sleeps",
+            "url": "https://oldschool.runescape.wiki/w/While_Guthix_Sleeps",
+            "skills": ["72 Thieving", "67 Magic"],
+            "quests": ["Defender of Varrock"],
+            "transitive_quests": ["Shield of Arrav"],
+            "other": ["Ability to enter the Warriors' Guild"],
+            "_cached": True,
+        },
+    )
+    cli.OsrsCli().requirements("While Guthix Sleeps")
+    out = capture_console.getvalue()
+    assert "While Guthix Sleeps" in out
+    assert "(cached)" in out
+    assert "72 Thieving" in out and "67 Magic" in out
+    assert "Defender of Varrock" in out
+    assert "Shield of Arrav" in out
+    assert "Warriors' Guild" in out
+
+
+def test_requirements_command_empty_results_prints_message(capture_console, mocker):
+    mocker.patch(
+        "osrs_cli.api.get_quest_requirements",
+        return_value={
+            "quest": "Stub",
+            "url": "https://oldschool.runescape.wiki/w/Stub",
+            "skills": [],
+            "quests": [],
+            "transitive_quests": [],
+            "other": [],
+            "_cached": False,
+        },
+    )
+    cli.OsrsCli().requirements("Stub")
+    assert "No parseable requirements" in capture_console.getvalue()

@@ -270,6 +270,57 @@ class OsrsCli:
         data = api.get_quests(username, force=force, ttl=ttl)
         _render_quests(data, status=status)
 
+    def requirements(
+        self,
+        quest: str,
+        force: bool = False,
+        ttl: int = api.CACHE_TTL_SECONDS,
+    ):
+        """Show a quest's requirements (skill levels + prerequisite quests).
+
+        Pulls from the OSRS Wiki. Quest name is matched against the wiki page
+        title (redirects are followed), e.g. 'While Guthix Sleeps'.
+        """
+        data = api.get_quest_requirements(quest, force=force, ttl=ttl)
+        cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
+        console.print(f"[bold cyan]{data['quest']}[/bold cyan]  [dim]{data['url']}[/dim]{cached}")
+
+        skills = data.get("skills") or []
+        quests = data.get("quests") or []
+        other = data.get("other") or []
+
+        if skills:
+            t = Table(title="Skill requirements", header_style="bold magenta", expand=False)
+            t.add_column("Requirement", style="cyan")
+            for s in skills:
+                t.add_row(s)
+            console.print(t)
+        if quests:
+            t = Table(title="Quest prerequisites (direct)", header_style="bold magenta", expand=False)
+            t.add_column("Quest", style="cyan")
+            for q in quests:
+                t.add_row(q)
+            console.print(t)
+        transitive = data.get("transitive_quests") or []
+        if transitive:
+            t = Table(
+                title=f"Transitive prereqs ({len(transitive)})",
+                header_style="bold magenta",
+                expand=False,
+            )
+            t.add_column("Quest", style="dim")
+            for q in transitive:
+                t.add_row(q)
+            console.print(t)
+        if other:
+            t = Table(title="Other", header_style="bold magenta", expand=False)
+            t.add_column("Requirement", style="cyan")
+            for o in other:
+                t.add_row(o)
+            console.print(t)
+        if not (skills or quests or other):
+            console.print("[dim]No parseable requirements found.[/dim]")
+
     def clear_cache(self):
         """Delete all locally cached player responses."""
         n = api.clear_cache()
