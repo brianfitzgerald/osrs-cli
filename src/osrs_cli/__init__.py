@@ -25,10 +25,30 @@ from . import api
 console = Console()
 
 SKILL_ORDER = [
-    "overall", "attack", "defence", "strength", "hitpoints", "ranged",
-    "prayer", "magic", "cooking", "woodcutting", "fletching", "fishing",
-    "firemaking", "crafting", "smithing", "mining", "herblore", "agility",
-    "thieving", "slayer", "farming", "runecrafting", "hunter", "construction",
+    "overall",
+    "attack",
+    "defence",
+    "strength",
+    "hitpoints",
+    "ranged",
+    "prayer",
+    "magic",
+    "cooking",
+    "woodcutting",
+    "fletching",
+    "fishing",
+    "firemaking",
+    "crafting",
+    "smithing",
+    "mining",
+    "herblore",
+    "agility",
+    "thieving",
+    "slayer",
+    "farming",
+    "runecrafting",
+    "hunter",
+    "construction",
 ]
 
 ACTIVITY_LABELS = {
@@ -144,8 +164,7 @@ def _render_quests(data: dict, status: str = "all") -> None:
     cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
     ts = data.get("timestamp", "?")
     console.print(
-        f"[bold cyan]{data.get('username','?')}[/bold cyan] quests  "
-        f"[dim]uploaded={ts}[/dim]{cached}"
+        f"[bold cyan]{data.get('username', '?')}[/bold cyan] quests  [dim]uploaded={ts}[/dim]{cached}"
     )
     console.print(
         f"[green]{complete}[/green] complete · "
@@ -233,7 +252,13 @@ class OsrsCli:
             return
         _render_quests(data, status="all")
 
-    def quests(self, username: str, status: str = "all", force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
+    def quests(
+        self,
+        username: str,
+        status: str = "all",
+        force: bool = False,
+        ttl: int = api.CACHE_TTL_SECONDS,
+    ):
         """Show quest completion (via WikiSync RuneLite plugin data).
 
         Args:
@@ -256,7 +281,7 @@ def main():
         fire.Fire(OsrsCli, name="osrs-cli")
     except api.RateLimitError as e:
         console.print(f"[bold red]Rate limit:[/bold red] {e}")
-        raise SystemExit(2)
+        raise SystemExit(2) from e
     except ValueError as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
-        raise SystemExit(1)
+        raise SystemExit(1) from e

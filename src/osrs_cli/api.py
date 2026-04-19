@@ -27,7 +27,7 @@ def _load_rate_state() -> list[float]:
         return []
     try:
         return json.loads(RATE_STATE_FILE.read_text())
-    except (json.JSONDecodeError, OSError):
+    except json.JSONDecodeError, OSError:
         return []
 
 
@@ -63,7 +63,7 @@ def _read_cache(key: str, ttl: int) -> dict[str, Any] | None:
         return None
     try:
         return json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
+    except json.JSONDecodeError, OSError:
         return None
 
 
@@ -113,8 +113,7 @@ def get_quests(username: str, *, force: bool = False, ttl: int = CACHE_TTL_SECON
     resp = requests.get(WIKISYNC_URL.format(username=username), headers=headers, timeout=15)
     if resp.status_code == 404 or resp.status_code == 400:
         raise ValueError(
-            f"No WikiSync data for '{username}'. "
-            "Player must run the WikiSync RuneLite plugin at least once."
+            f"No WikiSync data for '{username}'. Player must run the WikiSync RuneLite plugin at least once."
         )
     if resp.status_code == 429:
         raise RateLimitError("WikiSync returned 429 — you are rate limited.")

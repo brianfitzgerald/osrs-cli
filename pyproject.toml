@@ -1,7 +1,7 @@
 [project]
 name = "osrs-cli"
 version = "0.1.0"
-description = "Add your description here"
+description = "CLI for reading OSRS info"
 readme = "README.md"
 authors = [
     { name = "Brian Fitzgerald", email = "brianfitzgerald242@gmail.com" }
@@ -16,6 +16,24 @@ dependencies = [
 [project.scripts]
 osrs-cli = "osrs_cli:main"
 
+[tool.ruff]
+line-length = 110
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+
 [build-system]
 requires = ["uv_build>=0.9.28,<0.10.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.15.11",
+    "ty>=0.0.31",
+]
