@@ -21,8 +21,10 @@ from rich.console import Console
 from rich.table import Table
 
 from . import api
+from .api import OsrsApiClient
 
 console = Console()
+client = OsrsApiClient()
 
 SKILL_ORDER = [
     "overall",
@@ -215,19 +217,19 @@ class OsrsCli:
 
     def stats(self, username: str, force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
         """Show a player's current skill levels, XP, and ranks."""
-        player = api.get_player(username, force=force, ttl=ttl)
+        player = client.get_player(username, force=force, ttl=ttl)
         _header(player)
         console.print(_skills_table(player))
 
     def activities(self, username: str, force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
         """Show a player's activity scores (clues, BH, LMS, GotR, etc.)."""
-        player = api.get_player(username, force=force, ttl=ttl)
+        player = client.get_player(username, force=force, ttl=ttl)
         _header(player)
         console.print(_activities_table(player))
 
     def player(self, username: str, force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
         """Full summary: skills, activities, and top bosses."""
-        player = api.get_player(username, force=force, ttl=ttl)
+        player = client.get_player(username, force=force, ttl=ttl)
         _header(player)
         console.print(_skills_table(player))
         console.print(_activities_table(player))
@@ -239,14 +241,14 @@ class OsrsCli:
         Quest data is best-effort — if the player has never run the WikiSync
         RuneLite plugin, quests are skipped with a note.
         """
-        player = api.get_player(username, force=force, ttl=ttl)
+        player = client.get_player(username, force=force, ttl=ttl)
         _header(player)
         console.print(_skills_table(player))
         console.print(_activities_table(player))
         console.print(_bosses_table(player, top=200))
 
         try:
-            data = api.get_quests(username, force=force, ttl=ttl)
+            data = client.get_quests(username, force=force, ttl=ttl)
         except ValueError as e:
             console.print(f"[dim]Quests: {e}[/dim]")
             return
@@ -267,7 +269,7 @@ class OsrsCli:
             force: If True, bypass local cache.
             ttl: Cache TTL in seconds (default 300).
         """
-        data = api.get_quests(username, force=force, ttl=ttl)
+        data = client.get_quests(username, force=force, ttl=ttl)
         _render_quests(data, status=status)
 
     def requirements(
@@ -281,7 +283,7 @@ class OsrsCli:
         Pulls from the OSRS Wiki. Quest name is matched against the wiki page
         title (redirects are followed), e.g. 'While Guthix Sleeps'.
         """
-        data = api.get_quest_requirements(quest, force=force, ttl=ttl)
+        data = client.get_quest_requirements(quest, force=force, ttl=ttl)
         cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
         console.print(f"[bold cyan]{data['quest']}[/bold cyan]  [dim]{data['url']}[/dim]{cached}")
 
@@ -323,7 +325,7 @@ class OsrsCli:
 
     def clear_cache(self):
         """Delete all locally cached player responses."""
-        n = api.clear_cache()
+        n = client.clear_cache()
         console.print(f"Cleared [bold]{n}[/bold] cached file(s).")
 
 

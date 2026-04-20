@@ -61,7 +61,7 @@ def test_render_quests_uses_ascii_markers(capture_console):
 
 def test_requirements_command_renders_all_sections(capture_console, mocker):
     mocker.patch(
-        "osrs_cli.api.get_quest_requirements",
+        "osrs_cli.client.get_quest_requirements",
         return_value={
             "quest": "While Guthix Sleeps",
             "url": "https://oldschool.runescape.wiki/w/While_Guthix_Sleeps",
@@ -84,7 +84,7 @@ def test_requirements_command_renders_all_sections(capture_console, mocker):
 
 def test_requirements_command_empty_results_prints_message(capture_console, mocker):
     mocker.patch(
-        "osrs_cli.api.get_quest_requirements",
+        "osrs_cli.client.get_quest_requirements",
         return_value={
             "quest": "Stub",
             "url": "https://oldschool.runescape.wiki/w/Stub",

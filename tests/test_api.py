@@ -7,6 +7,7 @@ import pytest
 import requests
 
 from osrs_cli import api
+from osrs_cli.api import OsrsApiClient
 
 
 def _resp(status: int, payload: dict | None = None) -> MagicMock:
@@ -17,40 +18,40 @@ def _resp(status: int, payload: dict | None = None) -> MagicMock:
     return r
 
 
-def test_cache_respects_ttl(isolated_cache):
-    api._write_cache("k", {"x": 1})
-    assert api._read_cache("k", ttl=60) == {"x": 1}
-    path = api._cache_path("k")
+def test_cache_respects_ttl(client):
+    client._write_cache("k", {"x": 1})
+    assert client._read_cache("k", ttl=60) == {"x": 1}
+    path = client._cache_path("k")
     os.utime(path, (0, 0))
-    assert api._read_cache("k", ttl=60) is None
+    assert client._read_cache("k", ttl=60) is None
 
 
-def test_rate_limit_blocks_after_max(isolated_cache, monkeypatch):
-    monkeypatch.setattr(api, "RATE_LIMIT_MAX", 2)
-    api._check_rate_limit()
-    api._check_rate_limit()
+def test_rate_limit_blocks_after_max(tmp_path):
+    c = OsrsApiClient(cache_dir=tmp_path / "cache", rate_limit_max=2)
+    c._check_rate_limit()
+    c._check_rate_limit()
     with pytest.raises(api.RateLimitError):
-        api._check_rate_limit()
+        c._check_rate_limit()
 
 
-def test_get_player_caches_and_force_bypasses(isolated_cache, mocker):
+def test_get_player_caches_and_force_bypasses(client, mocker):
     get = mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, {"username": "foo"}))
-    api.get_player("foo")
-    assert api.get_player("foo")["_cached"] is True
-    api.get_player("foo", force=True)
+    client.get_player("foo")
+    assert client.get_player("foo")["_cached"] is True
+    client.get_player("foo", force=True)
     assert get.call_count == 2
 
 
-def test_get_player_404_raises_value_error(isolated_cache, mocker):
+def test_get_player_404_raises_value_error(client, mocker):
     mocker.patch("osrs_cli.api.requests.get", return_value=_resp(404))
     with pytest.raises(ValueError, match="not found"):
-        api.get_player("missing")
+        client.get_player("missing")
 
 
-def test_get_quests_missing_player_raises_friendly_error(isolated_cache, mocker):
+def test_get_quests_missing_player_raises_friendly_error(client, mocker):
     mocker.patch("osrs_cli.api.requests.get", return_value=_resp(400))
     with pytest.raises(ValueError, match="WikiSync"):
-        api.get_quests("foo")
+        client.get_quests("foo")
 
 
 def test_parse_requirements_extracts_scp_skills_and_nested_quests():
@@ -63,7 +64,7 @@ def test_parse_requirements_extracts_scp_skills_and_nested_quests():
         "***[[Shield of Arrav]]\n"
         "**[[The Path of Glouphrie]]\n"
     )
-    out = api._parse_requirements(field)
+    out = OsrsApiClient._parse_requirements(field)
     assert "72 Thieving" in out["skills"]
     assert "67 Magic" in out["skills"]
     assert out["quests"] == ["Defender of Varrock", "The Path of Glouphrie"]
@@ -71,21 +72,22 @@ def test_parse_requirements_extracts_scp_skills_and_nested_quests():
     assert any("Warriors' Guild" in o for o in out["other"])
 
 
-def test_get_quest_requirements_wiki_error_raises(isolated_cache, mocker):
+def test_get_quest_requirements_wiki_error_raises(client, mocker):
     mocker.patch(
         "osrs_cli.api.requests.get",
         return_value=_resp(200, {"error": {"info": "missingtitle"}}),
     )
     with pytest.raises(ValueError, match="missingtitle"):
-        api.get_quest_requirements("Nope")
+        client.get_quest_requirements("Nope")
 
 
 def test_strip_wiki_markup_handles_scp_links_and_templates():
-    assert api._strip_wiki_markup("{{SCP|Thieving|72|link=yes}}") == "72 Thieving"
-    assert api._strip_wiki_markup("[[Warriors' Guild]]") == "Warriors' Guild"
-    assert api._strip_wiki_markup("[[Foo|Bar]]") == "Bar"
-    assert api._strip_wiki_markup("{{Boostable|no}} text") == "text"
-    assert api._strip_wiki_markup("''italic''") == "italic"
+    strip = OsrsApiClient._strip_wiki_markup
+    assert strip("{{SCP|Thieving|72|link=yes}}") == "72 Thieving"
+    assert strip("[[Warriors' Guild]]") == "Warriors' Guild"
+    assert strip("[[Foo|Bar]]") == "Bar"
+    assert strip("{{Boostable|no}} text") == "text"
+    assert strip("''italic''") == "italic"
 
 
 def test_extract_requirements_field_stops_at_next_template_field():
@@ -97,7 +99,7 @@ def test_extract_requirements_field_stops_at_next_template_field():
         "|items = * Coins\n"
         "}}\n"
     )
-    field = api._extract_requirements_field(wikitext)
+    field = OsrsApiClient._extract_requirements_field(wikitext)
     assert field is not None
     assert "Magic|65" in field
     assert "Priest in Peril" in field
@@ -105,8 +107,9 @@ def test_extract_requirements_field_stops_at_next_template_field():
 
 
 def test_extract_requirements_field_missing_template_returns_none():
-    assert api._extract_requirements_field("no template here") is None
-    assert api._extract_requirements_field("{{Quest details\n|foo = bar\n}}") is None
+    extract = OsrsApiClient._extract_requirements_field
+    assert extract("no template here") is None
+    assert extract("{{Quest details\n|foo = bar\n}}") is None
 
 
 def test_parse_requirements_ignores_header_and_dedupes_transitive():
@@ -117,7 +120,7 @@ def test_parse_requirements_ignores_header_and_dedupes_transitive():
         "**[[A]]\n"  # duplicate direct should still appear once via dedupe in transitive
         "***[[B]]\n"  # duplicate transitive
     )
-    out = api._parse_requirements(field)
+    out = OsrsApiClient._parse_requirements(field)
     # A appears twice as a direct; B only once in transitive
     assert out["quests"].count("A") == 2  # direct list preserves duplicates (raw parse)
     assert out["transitive_quests"] == ["B"]
@@ -126,12 +129,12 @@ def test_parse_requirements_ignores_header_and_dedupes_transitive():
 def test_parse_requirements_quest_before_header_is_transitive():
     """Quest links appearing before the quest-list header aren't 'direct prereqs'."""
     field = "*[[Some Quest]]\n"
-    out = api._parse_requirements(field)
+    out = OsrsApiClient._parse_requirements(field)
     assert out["quests"] == []
     assert out["transitive_quests"] == ["Some Quest"]
 
 
-def test_get_quest_requirements_caches_and_populates_fields(isolated_cache, mocker):
+def test_get_quest_requirements_caches_and_populates_fields(client, mocker):
     wikitext = (
         "{{Quest details\n"
         "|requirements = * {{SCP|Thieving|72|link=yes}}\n"
@@ -144,7 +147,7 @@ def test_get_quest_requirements_caches_and_populates_fields(isolated_cache, mock
     payload = {"parse": {"title": "Test Quest", "wikitext": {"*": wikitext}}}
     get = mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, payload))
 
-    data = api.get_quest_requirements("test quest")
+    data = client.get_quest_requirements("test quest")
     assert data["quest"] == "Test Quest"
     assert data["url"].endswith("/Test_Quest")
     assert data["skills"] == ["72 Thieving"]
@@ -153,24 +156,24 @@ def test_get_quest_requirements_caches_and_populates_fields(isolated_cache, mock
     assert data["_cached"] is False
 
     # Second call hits the cache, not the network.
-    again = api.get_quest_requirements("test quest")
+    again = client.get_quest_requirements("test quest")
     assert again["_cached"] is True
     assert get.call_count == 1
 
 
-def test_get_quest_requirements_empty_wikitext_raises(isolated_cache, mocker):
+def test_get_quest_requirements_empty_wikitext_raises(client, mocker):
     mocker.patch(
         "osrs_cli.api.requests.get",
         return_value=_resp(200, {"parse": {"wikitext": {"*": ""}}}),
     )
     with pytest.raises(ValueError, match="No wiki page"):
-        api.get_quest_requirements("Nope")
+        client.get_quest_requirements("Nope")
 
 
-def test_get_quest_requirements_page_without_quest_template_raises(isolated_cache, mocker):
+def test_get_quest_requirements_page_without_quest_template_raises(client, mocker):
     mocker.patch(
         "osrs_cli.api.requests.get",
         return_value=_resp(200, {"parse": {"title": "Bronze axe", "wikitext": {"*": "some item page"}}}),
     )
     with pytest.raises(ValueError, match="requirements section"):
-        api.get_quest_requirements("Bronze axe")
+        client.get_quest_requirements("Bronze axe")
