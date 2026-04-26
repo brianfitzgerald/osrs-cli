@@ -4,6 +4,7 @@ Usage:
     osrs-cli stats <username>       Show current skill levels + totals.
     osrs-cli activities <username>  Show activities (clues, bounty hunter, LMS...).
     osrs-cli player <username>      Full summary: skills + activities + bosses.
+    osrs-cli wiki "<page title>"    Fetch an OSRS Wiki page as markdown.
     osrs-cli clear-cache            Drop locally cached responses.
 
 Flags (all query commands):
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 import fire
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.table import Table
 
 from . import api
@@ -205,6 +207,7 @@ class OsrsCli:
         player <username>        Summary: skills + activities + top bosses.
         full <username>          Everything: skills + activities + all bosses + quests.
         quests <username>        Quest completion (requires WikiSync RuneLite plugin).
+        wiki <title>             Fetch an OSRS Wiki page rendered as markdown.
         clear-cache              Delete locally cached responses.
 
     Common flags:
@@ -322,6 +325,28 @@ class OsrsCli:
             console.print(t)
         if not (skills or quests or other):
             console.print("[dim]No parseable requirements found.[/dim]")
+
+    def wiki(
+        self,
+        title: str,
+        force: bool = False,
+        ttl: int = api.CACHE_TTL_SECONDS,
+    ):
+        """Fetch an OSRS Wiki page and render it as markdown.
+
+        Pulls the page wikitext from the OSRS Wiki, converts to markdown
+        (best-effort), and pretty-prints it. Pages are cached locally.
+
+        Args:
+            title: Wiki page title (e.g. 'Tormented Demon', 'Magic seed').
+            force: Bypass local cache.
+            ttl: Cache TTL in seconds (default 300).
+        """
+        data = client.get_wiki_page(title, force=force, ttl=ttl)
+        cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
+        console.print(f"[bold cyan]{data['title']}[/bold cyan]  [dim]{data['url']}[/dim]{cached}")
+        console.print()
+        console.print(Markdown(data["markdown"]))
 
     def clear_cache(self):
         """Delete all locally cached player responses."""

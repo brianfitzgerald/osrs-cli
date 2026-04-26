@@ -82,6 +82,24 @@ def test_requirements_command_renders_all_sections(capture_console, mocker):
     assert "Warriors' Guild" in out
 
 
+def test_wiki_command_prints_title_url_and_rendered_markdown(capture_console, mocker):
+    mocker.patch(
+        "osrs_cli.client.get_wiki_page",
+        return_value={
+            "title": "Cake",
+            "url": "https://oldschool.runescape.wiki/w/Cake",
+            "markdown": "## Overview\n\n**Cake** is food.",
+            "_cached": True,
+        },
+    )
+    cli.OsrsCli().wiki("Cake")
+    out = capture_console.getvalue()
+    assert "Cake" in out
+    assert "https://oldschool.runescape.wiki/w/Cake" in out
+    assert "(cached)" in out
+    assert "Overview" in out
+
+
 def test_requirements_command_empty_results_prints_message(capture_console, mocker):
     mocker.patch(
         "osrs_cli.client.get_quest_requirements",
