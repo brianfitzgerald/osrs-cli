@@ -211,6 +211,40 @@ def test_wikitext_to_markdown_strips_templates_and_files():
     assert "after" in wikitext_to_markdown("[[File:foo.png|thumb|see [[link]] here]]after")
 
 
+def test_wikitext_to_markdown_renders_quest_details_infobox():
+    wt = (
+        "{{Quest details\n"
+        "|difficulty = Intermediate\n"
+        "|length = Medium\n"
+        "|requirements = * {{SCP|Herblore|31|link=yes}} {{Boostable|yes}}\n"
+        "** [[Druidic Ritual]]\n"
+        "|rewards = *{{SCP|Herblore|11,000}} [[Herblore]] [[experience]]\n"
+        "}}\n"
+        "==Walkthrough==\nDo stuff.\n"
+    )
+    out = wikitext_to_markdown(wt)
+    # Reward XP survives (no separate Quest rewards template here, so it renders).
+    assert "11,000 Herblore" in out
+    # Boostable flag rendered inline on the requirement.
+    assert "31 Herblore" in out and "(boostable)" in out
+    # Nested prereq bullet kept (single bullet, not doubled).
+    assert "- [Druidic Ritual]" in out
+    assert "* *" not in out
+
+
+def test_wikitext_to_markdown_renders_quest_points_and_rewards_template():
+    wt = (
+        "{{Quest details\n|difficulty = Master\n|requirements = * {{SCP|Magic|65}} {{Boostable|no}}\n}}\n"
+        "==Rewards==\n"
+        "{{Quest rewards\n|qp = 5\n|rewards = *{{SCP|Magic|5,000}} [[Magic]] [[experience]]\n}}\n"
+    )
+    out = wikitext_to_markdown(wt)
+    # Quest points carried from the rewards template into the details block.
+    assert "Quest points:" in out and "5" in out
+    assert "5,000 Magic" in out
+    assert "(not boostable)" in out
+
+
 def test_wikitext_to_markdown_renders_simple_table():
 
     out = wikitext_to_markdown(

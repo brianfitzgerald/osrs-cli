@@ -40,9 +40,10 @@ def wikitext_to_markdown(wikitext: str) -> str:
     """Best-effort wikitext → markdown rendering.
 
     Handles headings, bold/italic, wiki + external links, lists, SCP skill
-    templates, and strips templates / refs / tables / file embeds. Nested
-    templates are unwrapped iteratively. Tables are replaced with a
-    placeholder rather than rendered.
+    templates, and the {{Quest details}} / {{Quest rewards}} infoboxes (so
+    requirements with boostable flags, quest points, and reward XP survive).
+    Other templates / refs / file embeds are stripped. Nested templates are
+    unwrapped iteratively. Tables are rendered as markdown tables.
     """
     s = wikitext
 
@@ -59,17 +60,26 @@ def wikitext_to_markdown(wikitext: str) -> str:
     # File/image embeds — proper bracket-balanced removal.
     s = _drop_file_links(s)
 
+    # Quest infobox templates → markdown sections, before they get stripped as
+    # generic templates. Keeps requirements (w/ boostable), quest points, rewards.
+    s = _render_quest_templates(s)
+
     # Tables: convert top-level `{| ... |}` blocks to markdown tables. Nested
     # tables are handled by recursing on cell contents.
     s = _convert_tables(s)
 
-    # SCP skill-check template before generic template stripping.
+    # SCP skill-check template before generic template stripping. Handles an
+    # optional quantity in group 2 (e.g. {{SCP|Herblore|11,000}} → 11,000 Herblore).
     s = re.sub(
         r"\{\{SCP\|([^|}]+)\|([^|}]+)(?:\|[^}]*)?\}\}",
         lambda m: f"{m.group(2).strip()} {m.group(1).strip()}",
         s,
         flags=re.IGNORECASE,
     )
+
+    # Boostable / quest-requirement markers (only meaningful in the page render).
+    s = re.sub(r"\{\{\s*Boostable\s*\|\s*yes\s*\}\}", " _(boostable)_", s, flags=re.IGNORECASE)
+    s = re.sub(r"\{\{\s*Boostable\s*\|\s*no\s*\}\}", " _(not boostable)_", s, flags=re.IGNORECASE)
 
     # Strip remaining templates iteratively to handle nesting.
     for _ in range(8):
@@ -153,6 +163,128 @@ def _drop_file_links(s: str) -> str:
             out.append(s[i])
             i += 1
     return "".join(out)
+
+
+def _render_quest_templates(s: str) -> str:
+    """Render {{Quest rewards}} and {{Quest details}} infoboxes into markdown.
+
+    Both carry the quest's reward XP and quest points; {{Quest details}} also
+    holds the requirements list (with {{Boostable}} flags). The spliced output
+    is itself wikitext (SCP/Boostable/lists/links), processed by later passes.
+    """
+    had_rewards_template = bool(re.search(r"\{\{\s*Quest rewards\b", s, re.IGNORECASE))
+    carried: dict[str, str] = {}
+
+    def render_rewards(body: str) -> str:
+        f = _template_fields(body)
+        if f.get("qp"):
+            carried["qp"] = f["qp"]  # quest points usually live here, not in details
+        return _normalize_list_markers(f["rewards"]) + "\n" if f.get("rewards") else ""
+
+    def render_details(body: str) -> str:
+        return _render_quest_details(
+            body, include_rewards=not had_rewards_template, qp_fallback=carried.get("qp")
+        )
+
+    s = _replace_template(s, "Quest rewards", render_rewards)
+    s = _replace_template(s, "Quest details", render_details)
+    return s
+
+
+def _normalize_list_markers(text: str) -> str:
+    """Ensure `*`/`#` list markers have a trailing space.
+
+    OSRS infoboxes write `*item` / `**item` with no space; the list pass needs
+    a space after the marker to recognise it. Safe here because infobox fields
+    contain wiki bold (`'''`), never markdown `**`.
+    """
+    return re.sub(r"(?m)^([*#]+)(?=[^*#\s])", r"\1 ", text)
+
+
+def _replace_template(s: str, name: str, renderer: Any) -> str:
+    """Replace each brace-balanced `{{name ...}}` block with `renderer(body)`."""
+    pat = re.compile(r"\{\{\s*" + re.escape(name) + r"\s*[|}]", re.IGNORECASE)
+    while True:
+        m = pat.search(s)
+        if not m:
+            return s
+        start = m.start()
+        depth, j, n = 0, start, len(s)
+        end = None
+        while j < n:
+            if s[j : j + 2] == "{{":
+                depth += 1
+                j += 2
+            elif s[j : j + 2] == "}}":
+                depth -= 1
+                j += 2
+                if depth == 0:
+                    end = j
+                    break
+            else:
+                j += 1
+        if end is None:
+            return s  # unbalanced — leave the rest untouched
+        s = s[:start] + renderer(s[start + 2 : end - 2]) + s[end:]
+
+
+def _template_fields(body: str) -> dict[str, str]:
+    """Parse a template body into `{field: value}`, splitting on top-level `|`.
+
+    Tracks `{{...}}` / `[[...]]` nesting so pipes inside links and nested
+    templates don't split fields. The leading segment (template name) is dropped.
+    """
+    parts: list[str] = []
+    seg: list[str] = []
+    depth, i, n = 0, 0, len(body)
+    while i < n:
+        two = body[i : i + 2]
+        if two in ("{{", "[["):
+            depth += 1
+            seg.append(two)
+            i += 2
+        elif two in ("}}", "]]"):
+            depth = max(0, depth - 1)
+            seg.append(two)
+            i += 2
+        elif body[i] == "|" and depth == 0:
+            parts.append("".join(seg))
+            seg = []
+            i += 1
+        else:
+            seg.append(body[i])
+            i += 1
+    parts.append("".join(seg))
+
+    fields: dict[str, str] = {}
+    for p in parts[1:]:  # skip the template name
+        if "=" in p:
+            key, _, value = p.partition("=")
+            fields[key.strip().lower()] = value.strip()
+    return fields
+
+
+def _render_quest_details(body: str, *, include_rewards: bool, qp_fallback: str | None = None) -> str:
+    """Render the {{Quest details}} infobox: meta, requirements, items, rewards."""
+    f = _template_fields(body)
+    qp = f.get("qp") or qp_fallback
+    block: list[str] = ["== Quest details =="]
+    if f.get("difficulty"):
+        block.append(f"- **Difficulty:** {f['difficulty']}")
+    if f.get("length"):
+        block.append(f"- **Length:** {f['length']}")
+    if qp:
+        block.append(f"- **Quest points:** {qp}")
+    for heading, key, gate in (
+        ("Requirements", "requirements", True),
+        ("Items required", "items", True),
+        ("Recommended", "recommended", True),
+        ("Rewards", "rewards", include_rewards),
+    ):
+        if gate and f.get(key):
+            block.append(f"=== {heading} ===")
+            block.append(_normalize_list_markers(f[key]))
+    return "\n".join(block) + "\n"
 
 
 def _convert_tables(s: str) -> str:
