@@ -4,6 +4,7 @@ Usage:
     osrs-cli stats <username>       Show current skill levels + totals.
     osrs-cli activities <username>  Show activities (clues, bounty hunter, LMS...).
     osrs-cli player <username>      Full summary: skills + activities + bosses.
+    osrs-cli price "<item name>"    Latest Grand Exchange high/low prices.
     osrs-cli wiki "<page title>"    Fetch an OSRS Wiki page as markdown.
     osrs-cli clear-cache            Drop locally cached responses.
 
@@ -11,8 +12,8 @@ Flags (all query commands):
     --force      Bypass the local cache and hit the API.
     --ttl <sec>  Override cache TTL in seconds (default 300).
 
-The CLI caches responses under ~/.cache/osrs-cli and enforces the public
-Wise Old Man rate limit of 20 requests per 60 seconds.
+The CLI caches responses under ~/.cache/osrs-cli and applies a shared
+client-side limit of 20 requests per 60 seconds.
 """
 
 from __future__ import annotations
@@ -199,7 +200,7 @@ def _render_quests(data: dict, status: str = "all") -> None:
 
 
 class OsrsCli:
-    """osrs-cli — query Old School RuneScape players via the Wise Old Man API.
+    """osrs-cli — query Old School RuneScape player data and Grand Exchange prices.
 
     Commands:
         stats <username>         Current skill levels + XP + ranks.
@@ -207,6 +208,7 @@ class OsrsCli:
         player <username>        Summary: skills + activities + top bosses.
         full <username>          Everything: skills + activities + all bosses + quests.
         quests <username>        Quest completion (requires WikiSync RuneLite plugin).
+        price <item>             Latest Grand Exchange instant-buy/sell prices.
         wiki <title>             Fetch an OSRS Wiki page rendered as markdown.
         clear-cache              Delete locally cached responses.
 
@@ -274,6 +276,32 @@ class OsrsCli:
         """
         data = client.get_quests(username, force=force, ttl=ttl)
         _render_quests(data, status=status)
+
+    def price(
+        self,
+        item: str,
+        force: bool = False,
+        ttl: int = api.CACHE_TTL_SECONDS,
+    ):
+        """Show an item's latest live Grand Exchange prices.
+
+        The high price is the latest instant-buy price and the low price is
+        the latest instant-sell price reported by the OSRS Wiki prices API.
+        """
+        data = client.get_item_price(item, force=force, ttl=ttl)
+        cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
+        console.print(
+            f"[bold cyan]{data['item']}[/bold cyan]  "
+            f"[dim]item_id={data['id']} members={data.get('members')} "
+            f"buy_limit={_fmt(data.get('limit'))}[/dim]{cached}"
+        )
+        table = Table(title="Live Grand Exchange prices", header_style="bold magenta", expand=False)
+        table.add_column("Transaction", style="cyan")
+        table.add_column("Price", justify="right")
+        table.add_column("Updated (Unix)", justify="right", style="dim")
+        table.add_row("Instant buy (high)", _fmt(data.get("high")), _fmt(data.get("high_time")))
+        table.add_row("Instant sell (low)", _fmt(data.get("low")), _fmt(data.get("low_time")))
+        console.print(table)
 
     def requirements(
         self,
@@ -349,7 +377,7 @@ class OsrsCli:
         console.print(Markdown(data["markdown"]))
 
     def clear_cache(self):
-        """Delete all locally cached player responses."""
+        """Delete all locally cached API responses."""
         n = client.clear_cache()
         console.print(f"Cleared [bold]{n}[/bold] cached file(s).")
 

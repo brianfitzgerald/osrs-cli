@@ -1,21 +1,21 @@
 ---
 name: osrs-helper
-description: Plan an optimal path for an Old School RuneScape goal (finishing a quest, unlocking content, hitting a skill milestone) for a specific player. Use when the user asks what they should do next in OSRS, how to complete a quest, what's blocking them, or how to efficiently reach a goal. Pulls live player state and quest requirements via the `osrs-cli` tool in this repo.
+description: Plan an optimal path for an Old School RuneScape goal or look up live Grand Exchange prices. Use when the user asks what a player should do next, how to complete a quest, what's blocking them, how to efficiently reach a goal, or what an item currently costs. Pulls live player state, quest requirements, and item prices via the `osrs-cli` tool in this repo.
 ---
 
 # OSRS goal planner
 
-You have access to the `osrs-cli` command in this repository, which reads live player data from Wise Old Man + WikiSync and quest requirements from the OSRS Wiki. Use it to answer "what should <player> do next to accomplish <goal>" — don't guess from memory when the CLI can give you ground truth.
+You have access to the `osrs-cli` command in this repository, which reads live player data from Wise Old Man + WikiSync, quest requirements from the OSRS Wiki, and live Grand Exchange prices from the OSRS Wiki prices API. Use it instead of guessing from memory when the CLI can provide current data.
 
 ## When to invoke this skill
 
-Triggers: the user mentions an OSRS player name alongside a goal, asks what to do next, asks how to reach a quest/skill/diary/unlock, asks what's blocking them, or asks for an optimal ordering of content.
+Triggers: the user mentions an OSRS player name alongside a goal, asks what to do next, asks how to reach a quest/skill/diary/unlock, asks what's blocking them, asks for an optimal ordering of content, or asks for a current Grand Exchange item price.
 
-Do NOT invoke for questions that aren't about a specific player's progress (e.g. generic meta discussion, item prices, drop tables) — the CLI doesn't cover those.
+Do NOT invoke for generic meta discussion or drop tables. Item prices are supported even when no player is specified.
 
 ## The CLI
 
-All commands run with `uv run osrs-cli <...>` from the repo root. Cached for 300s under `~/.cache/osrs-cli/`; add `--force` to bypass, `--ttl N` to change. Rate-limited at 20 req/60s across all calls (WOM + WikiSync + Wiki).
+All commands run with `uv run osrs-cli <...>` from the repo root. Cached for 300s under `~/.cache/osrs-cli/`; add `--force` to bypass, `--ttl N` to change. Rate-limited at 20 req/60s across all calls (WOM + WikiSync + Wiki services).
 
 | Command | Use it when |
 |---|---|
@@ -25,9 +25,12 @@ All commands run with `uv run osrs-cli <...>` from the repo root. Cached for 300
 | `full <user>` | Skills + activities + all bosses + every quest status. Use when goal depends on quest state. |
 | `quests <user> [--status complete\|in-progress\|not-started\|all]` | Filter the quest log. |
 | `requirements "<Quest Name>"` | Skill + quest prereqs for a specific quest (scraped from the wiki). Quote multi-word names. |
+| `price "<Item Name>"` | Latest Grand Exchange instant-buy (high) and instant-sell (low) prices. Quote multi-word names. |
 | `clear-cache` | Only if the user explicitly asks for a fresh fetch and `--force` isn't enough. |
 
 Quest names are wiki page titles. Redirects are followed, so "Dragon Slayer 1" will resolve to "Dragon Slayer I", but prefer the canonical name.
+
+Item names use exact, case-insensitive matching against the Wiki prices mapping. The output timestamps are Unix seconds. Treat `high` as the latest price paid by an instant buyer and `low` as the latest price accepted by an instant seller. If either side has no observed trade, its price and timestamp display as unavailable. Live prices are player-reported and may differ from the official guide price.
 
 ## Recommended workflow
 

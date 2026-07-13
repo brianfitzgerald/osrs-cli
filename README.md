@@ -1,7 +1,9 @@
 # osrs-cli
 
-A CLI for querying Old School RuneScape player data via the
-[Wise Old Man](https://docs.wiseoldman.net/api) and [WikiSync](https://sync.runescape.wiki/) APIs.
+A CLI for querying Old School RuneScape player data and live Grand Exchange
+prices via the [Wise Old Man](https://docs.wiseoldman.net/api),
+[WikiSync](https://sync.runescape.wiki/), and
+[OSRS Wiki prices](https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices) APIs.
 
 Designed to be used with LLMs / agent harnesses.
 
@@ -15,10 +17,11 @@ Designed to be used with LLMs / agent harnesses.
 | `full <username>` | Everything: skills + activities + all bosses + quests. |
 | `quests <username>` | Quest completion (via WikiSync). `--status all\|complete\|in-progress\|not-started`. |
 | `requirements "<quest>"` | Skill + quest prerequisites for a quest, scraped from the OSRS Wiki. |
+| `price "<item name>"` | Latest Grand Exchange instant-buy and instant-sell prices. |
 | `wiki "<page title>"` | Fetch an OSRS Wiki page and render its content as markdown. |
 | `clear-cache` | Delete locally cached API responses. |
 
-> **Quests note:** the OSRS hiscores don't expose quest completion, so Wise Old
+> Quests note: the OSRS hiscores don't expose quest completion, so Wise Old
 > Man can't provide it. `quests` instead hits
 > [WikiSync](https://sync.runescape.wiki/) (`sync.runescape.wiki`), which is fed
 > by the RuneLite WikiSync plugin. A player must have run the
@@ -43,11 +46,17 @@ uv run osrs-cli stats Cyberduck242
 uv run osrs-cli activities Cyberduck242
 uv run osrs-cli player Cyberduck242 --force
 uv run osrs-cli requirements "While Guthix Sleeps"
+uv run osrs-cli price "Abyssal whip"
 uv run osrs-cli wiki "Tormented Demon"
 uv run osrs-cli clear-cache
 ```
 
 Responses are cached under `~/.cache/osrs-cli/` for 5 minutes by default.
+
+`price` resolves an exact, case-insensitive item name through the OSRS Wiki
+mapping endpoint. It reports the latest instant-buy (high) and instant-sell
+(low) price with each trade's Unix timestamp. These are live player-reported
+trades and may differ from the official Grand Exchange guide price.
 
 ### Wiki page rendering
 

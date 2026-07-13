@@ -82,6 +82,31 @@ def test_requirements_command_renders_all_sections(capture_console, mocker):
     assert "Warriors' Guild" in out
 
 
+def test_price_command_renders_live_prices(capture_console, mocker):
+    mocker.patch(
+        "osrs_cli.client.get_item_price",
+        return_value={
+            "item": "Abyssal whip",
+            "id": 4151,
+            "members": True,
+            "limit": 70,
+            "high": 1_600_000,
+            "high_time": 1_700_000_000,
+            "low": 1_590_000,
+            "low_time": 1_700_000_001,
+            "_cached": True,
+        },
+    )
+
+    cli.OsrsCli().price("Abyssal whip")
+
+    out = capture_console.getvalue()
+    assert "Abyssal whip" in out and "item_id=4151" in out
+    assert "Instant buy (high)" in out and "1,600,000" in out
+    assert "Instant sell (low)" in out and "1,590,000" in out
+    assert "(cached)" in out
+
+
 def test_wiki_command_prints_title_url_and_rendered_markdown(capture_console, mocker):
     mocker.patch(
         "osrs_cli.client.get_wiki_page",

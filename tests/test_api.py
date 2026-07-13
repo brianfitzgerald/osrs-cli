@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,10 +18,10 @@ from osrs_cli.wiki import (
 )
 
 
-def _resp(status: int, payload: dict | None = None) -> MagicMock:
+def _resp(status: int, payload: Any = None) -> MagicMock:
     r = MagicMock(spec=requests.Response)
     r.status_code = status
-    r.json.return_value = payload or {}
+    r.json.return_value = payload if payload is not None else {}
     r.raise_for_status.side_effect = requests.HTTPError(f"HTTP {status}") if status >= 400 else None
     return r
 
@@ -53,6 +54,100 @@ def test_get_player_404_raises_value_error(client, mocker):
     mocker.patch("osrs_cli.api.requests.get", return_value=_resp(404))
     with pytest.raises(ValueError, match="not found"):
         client.get_player("missing")
+
+
+def test_get_item_price_resolves_name_fetches_latest_and_caches(client, mocker):
+    get = mocker.patch(
+        "osrs_cli.api.requests.get",
+        side_effect=[
+            _resp(
+                200,
+                [
+                    {
+                        "id": 4151,
+                        "name": "Abyssal whip",
+                        "members": True,
+                        "limit": 70,
+                    }
+                ],
+            ),
+            _resp(
+                200,
+                {
+                    "data": {
+                        "4151": {
+                            "high": 1_600_000,
+                            "highTime": 1_700_000_000,
+                            "low": 1_590_000,
+                            "lowTime": 1_700_000_001,
+                        }
+                    }
+                },
+            ),
+        ],
+    )
+
+    data = client.get_item_price("abyssal WHIP")
+
+    assert data == {
+        "item": "Abyssal whip",
+        "id": 4151,
+        "members": True,
+        "limit": 70,
+        "high": 1_600_000,
+        "high_time": 1_700_000_000,
+        "low": 1_590_000,
+        "low_time": 1_700_000_001,
+        "_cached": False,
+    }
+    assert client.get_item_price("abyssal WHIP")["_cached"] is True
+    assert get.call_count == 2
+    assert get.call_args_list[1].kwargs["params"] == {"id": 4151}
+
+
+def test_get_item_price_reuses_mapping_for_different_items(client, mocker):
+    get = mocker.patch(
+        "osrs_cli.api.requests.get",
+        side_effect=[
+            _resp(
+                200,
+                [
+                    {"id": 2, "name": "Cannonball"},
+                    {"id": 4151, "name": "Abyssal whip"},
+                ],
+            ),
+            _resp(200, {"data": {"2": {"high": 200, "low": 190}}}),
+            _resp(200, {"data": {"4151": {"high": 1_600_000, "low": 1_590_000}}}),
+        ],
+    )
+
+    client.get_item_price("Cannonball")
+    client.get_item_price("Abyssal whip")
+
+    assert get.call_count == 3
+
+
+@pytest.mark.parametrize("item", ["Missing item", " "])
+def test_get_item_price_rejects_unknown_or_empty_item(client, mocker, item):
+    get = mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, []))
+
+    with pytest.raises(ValueError, match="not found|cannot be empty"):
+        client.get_item_price(item)
+
+    assert get.call_count == (0 if item.isspace() else 1)
+
+
+def test_get_item_price_without_trades_raises(client, mocker):
+    mocker.patch(
+        "osrs_cli.api.requests.get",
+        side_effect=[
+            _resp(200, [{"id": 4151, "name": "Abyssal whip"}]),
+            _resp(200, {"data": {}}),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="No live Grand Exchange price"):
+        client.get_item_price("Abyssal whip")
 
 
 def test_get_quests_missing_player_raises_friendly_error(client, mocker):

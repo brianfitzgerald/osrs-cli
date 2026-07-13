@@ -14,11 +14,12 @@ from . import wiki
 BASE_URL = "https://api.wiseoldman.net/v2"
 WIKISYNC_URL = "https://sync.runescape.wiki/runelite/player/{username}/STANDARD"
 WIKI_API_URL = "https://oldschool.runescape.wiki/api.php"
+PRICES_API_URL = "https://prices.runescape.wiki/api/v1/osrs"
 CACHE_DIR = Path.home() / ".cache" / "osrs-cli"
 CACHE_TTL_SECONDS = 300
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 20
-USER_AGENT = "osrs-cli/0.1 (+https://github.com/)"
+USER_AGENT = "osrs-cli/0.1 (+https://github.com/brianfitzgerald/osrs-cli)"
 
 
 class RateLimitError(RuntimeError):
@@ -26,7 +27,7 @@ class RateLimitError(RuntimeError):
 
 
 class OsrsApiClient:
-    """Client for Wise Old Man, WikiSync, and the OSRS Wiki.
+    """Client for Wise Old Man, WikiSync, and OSRS Wiki services.
 
     Wraps three upstream services behind a single on-disk cache and a shared
     sliding-window rate limiter. Construct with custom paths for tests; the
@@ -99,7 +100,7 @@ class OsrsApiClient:
         path.write_text(json.dumps(data))
 
     def clear_cache(self) -> int:
-        """Remove all cached player data. Returns number of files removed."""
+        """Remove all cached API data. Returns number of files removed."""
         if not self.cache_dir.exists():
             return 0
         count = 0
@@ -111,6 +112,66 @@ class OsrsApiClient:
         return count
 
     # ---- HTTP fetchers -------------------------------------------------
+
+    def get_item_price(self, item: str, *, force: bool = False, ttl: int | None = None) -> dict[str, Any]:
+        """Fetch the latest Grand Exchange prices for an item by name."""
+        ttl = self.default_ttl if ttl is None else ttl
+        item = item.strip()
+        if not item:
+            raise ValueError("Item name cannot be empty.")
+
+        key = f"ge_price_{item}"
+        if not force:
+            cached = self._read_cache(key, ttl)
+            if cached is not None:
+                cached["_cached"] = True
+                return cached
+
+        headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+        mapping = None if force else self._read_cache("ge_mapping", ttl)
+        if mapping is None:
+            self._check_rate_limit()
+            resp = requests.get(f"{PRICES_API_URL}/mapping", headers=headers, timeout=15)
+            if resp.status_code == 429:
+                raise RateLimitError("Prices API returned 429 — you are rate limited.")
+            resp.raise_for_status()
+            mapping = {"items": resp.json()}
+            self._write_cache("ge_mapping", mapping)
+
+        selected = next(
+            (entry for entry in mapping["items"] if entry.get("name", "").casefold() == item.casefold()),
+            None,
+        )
+        if selected is None:
+            raise ValueError(f"Grand Exchange item '{item}' not found.")
+
+        self._check_rate_limit()
+        resp = requests.get(
+            f"{PRICES_API_URL}/latest",
+            params={"id": selected["id"]},
+            headers=headers,
+            timeout=15,
+        )
+        if resp.status_code == 429:
+            raise RateLimitError("Prices API returned 429 — you are rate limited.")
+        resp.raise_for_status()
+        price = (resp.json().get("data") or {}).get(str(selected["id"]))
+        if price is None:
+            raise ValueError(f"No live Grand Exchange price available for '{selected['name']}'.")
+
+        data: dict[str, Any] = {
+            "item": selected["name"],
+            "id": selected["id"],
+            "members": selected.get("members"),
+            "limit": selected.get("limit"),
+            "high": price.get("high"),
+            "high_time": price.get("highTime"),
+            "low": price.get("low"),
+            "low_time": price.get("lowTime"),
+        }
+        self._write_cache(key, data)
+        data["_cached"] = False
+        return data
 
     def get_player(self, username: str, *, force: bool = False, ttl: int | None = None) -> dict[str, Any]:
         """Fetch player details from WOM. Uses local cache (default TTL 5 minutes)."""
