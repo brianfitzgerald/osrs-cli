@@ -25,11 +25,9 @@ from rich.table import Table
 
 from . import api
 from .api import OsrsApiClient
-from .runelite import RuneLiteSnapshotStore
 
 console = Console()
 client = OsrsApiClient()
-runelite_store = RuneLiteSnapshotStore()
 
 SKILL_ORDER = [
     "overall",
@@ -201,171 +199,6 @@ def _render_quests(data: dict, status: str = "all") -> None:
     console.print(table)
 
 
-def _runelite_status(snapshot: dict, container_name: str) -> dict:
-    container = (snapshot.get("containers") or {}).get(container_name)
-    if not isinstance(container, dict) or not container.get("observed_at"):
-        raise ValueError(f"RuneLite has not observed {container_name} for this account yet.")
-    account = snapshot.get("account") or {}
-    state = "logged in" if (snapshot.get("session") or {}).get("logged_in") else "logged out"
-    console.print(
-        f"[bold cyan]{account.get('username', '?')}[/bold cyan]  "
-        f"[dim]profile={account.get('profile_type', '?')} state={state} "
-        f"observed={container['observed_at']}[/dim]"
-    )
-    return container
-
-
-def _runelite_items_table(title: str, items: list[dict]) -> Table:
-    table = Table(title=title, header_style="bold magenta", expand=False)
-    table.add_column("Slot", justify="right", style="dim")
-    table.add_column("Item", style="cyan")
-    table.add_column("Quantity", justify="right")
-    table.add_column("Item ID", justify="right", style="dim")
-    for item in items:
-        table.add_row(
-            str(item.get("slot", "—")),
-            item.get("name") or "Unknown item",
-            _fmt(item.get("quantity")),
-            _fmt(item.get("id")),
-        )
-    if not items:
-        table.add_row("—", "[dim]no items[/dim]", "—", "—")
-    return table
-
-
-class RuneliteCli:
-    """Read local data from the OSRS CLI Exporter RuneLite plugin."""
-
-    def __init__(self, store: RuneLiteSnapshotStore | None = None) -> None:
-        self._store = store if store is not None else runelite_store
-
-    def list(self, json: bool = False):
-        """List available local RuneLite snapshots."""
-        snapshots = self._store.list_snapshots()
-        if json:
-            console.print_json(data=snapshots)
-            return
-
-        table = Table(title="RuneLite snapshots", header_style="bold magenta", expand=False)
-        table.add_column("Username", style="cyan")
-        table.add_column("Profile")
-        table.add_column("State")
-        table.add_column("Updated", style="dim")
-        for snapshot in snapshots:
-            account = snapshot.get("account") or {}
-            state = "logged in" if (snapshot.get("session") or {}).get("logged_in") else "logged out"
-            table.add_row(
-                account.get("username", "?"),
-                account.get("profile_type", "?"),
-                state,
-                snapshot.get("updated_at") or "—",
-            )
-        if not snapshots:
-            table.add_row("[dim]no snapshots[/dim]", "—", "—", "—")
-        console.print(table)
-
-    def snapshot(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show a complete local RuneLite snapshot."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        if json:
-            console.print_json(data=snapshot)
-            return
-        self.bank(username, profile_type)
-        self.inventory(username, profile_type)
-        self.gear(username, profile_type)
-        self.layouts(username, profile_type)
-
-    def bank(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the last observed personal bank."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("bank")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed bank for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "bank")
-        console.print(_runelite_items_table("Bank", container.get("items") or []))
-
-    def inventory(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the current or last observed inventory."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("inventory")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed inventory for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "inventory")
-        console.print(_runelite_items_table("Inventory", container.get("items") or []))
-
-    def gear(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the current or last observed equipped gear."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("equipment")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed equipment for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "equipment")
-        table = _runelite_items_table("Equipment", container.get("items") or [])
-        table.columns[0].header = "Equipment slot"
-        console.print(table)
-
-    def layouts(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show named Bank Tags layouts."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        layouts = snapshot.get("layouts") or []
-        if json:
-            console.print_json(data=layouts)
-            return
-
-        account = snapshot.get("account") or {}
-        console.print(
-            f"[bold cyan]{account.get('username', '?')}[/bold cyan]  "
-            f"[dim]profile={account.get('profile_type', '?')} layouts={len(layouts)}[/dim]"
-        )
-        table = Table(title="Named bank layouts", header_style="bold magenta", expand=False)
-        table.add_column("Name", style="cyan")
-        table.add_column("Source")
-        table.add_column("Items", justify="right")
-        for layout in layouts:
-            table.add_row(
-                layout.get("name") or "?",
-                layout.get("source") or "?",
-                str(len(layout.get("items") or [])),
-            )
-        if not layouts:
-            table.add_row("[dim]no layouts[/dim]", "—", "0")
-        console.print(table)
-
-
 class OsrsCli:
     """osrs-cli — query Old School RuneScape player data and Grand Exchange prices.
 
@@ -386,9 +219,6 @@ class OsrsCli:
     Example:
         osrs-cli player Cyberduck242
     """
-
-    def __init__(self) -> None:
-        self.runelite = RuneliteCli()
 
     def stats(self, username: str, force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
         """Show a player's current skill levels, XP, and ranks."""

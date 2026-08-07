@@ -26,8 +26,6 @@ All commands run with `uv run osrs-cli <...>` from the repo root. Cached for 300
 | `quests <user> [--status complete\|in-progress\|not-started\|all]` | Filter the quest log. |
 | `requirements "<Quest Name>"` | Skill + quest prereqs for a specific quest (scraped from the wiki). Quote multi-word names. |
 | `price "<Item Name>"` | Latest Grand Exchange instant-buy (high) and instant-sell (low) prices. Quote multi-word names. |
-| `runelite snapshot <user> --json` | You need owned bank items, current inventory, equipped gear, or named Bank Tags layouts. Requires the local OSRS CLI Exporter plugin. |
-| `runelite bank\|inventory\|gear\|layouts <user> --json` | You need only one part of the local RuneLite snapshot. |
 | `clear-cache` | Only if the user explicitly asks for a fresh fetch and `--force` isn't enough. |
 
 Quest names are wiki page titles. Redirects are followed, so "Dragon Slayer 1" will resolve to "Dragon Slayer I", but prefer the canonical name.
@@ -37,7 +35,6 @@ Item names use exact, case-insensitive matching against the Wiki prices mapping.
 ## Recommended workflow
 
 1. **Get current state.** If the goal touches quests or anything quest-gated, run `full <user>`. Otherwise `player <user>` is cheaper. Do this once up front — reuse the output rather than re-querying.
-   - If the goal depends on owned items, supplies, equipment, or a saved bank layout, also run `runelite snapshot <user> --json` once. Do not read local RuneLite data for unrelated goals.
 2. **Get the goal's requirements.** Run `requirements "<Goal Quest>"`. The output has three buckets: `Skill requirements`, `Quest prerequisites (direct)`, and `Transitive prereqs`. Direct prereqs are the ones listed at the top level of the quest's prereq tree on the wiki — they're what actually unlocks the target. Transitive prereqs are their dependencies.
 3. **Expand unknown prereqs.** For each direct prereq the player hasn't completed, optionally run `requirements` again to surface its own skill requirements. Do this when you suspect a prereq has its own nasty wall (e.g. Desert Treasure I, Monkey Madness II). Stop expanding once you've covered every skill gate the player doesn't already clear — don't enumerate the whole tree.
 4. **Diff player vs. requirements.**
@@ -67,7 +64,6 @@ There's no single right ordering — be explicit about the tradeoff you're apply
 ## Things to watch out for
 
 - **WikiSync staleness.** Quest state comes from the RuneLite WikiSync plugin. If `uploaded=` in the `quests` output is days old, warn the user that quests completed since then won't show. Prefer the `uploaded` timestamp over WOM's snapshot time for quest-related answers.
-- **RuneLite snapshot staleness.** Bank data is the last complete bank observed by OSRS CLI Exporter. Inventory and equipment are the last states written by the plugin. Check each `observed_at` value and `session.logged_in`. State the age when item ownership affects the recommendation, and do not claim that stale data is current.
 - **Skill reqs from the wiki vs. what I remember.** The wiki infobox is the source of truth. If the CLI output conflicts with what you recall about a quest, trust the CLI — wiki values shift when Jagex reworks a quest.
 - **Boostable skills.** The CLI does not currently distinguish boostable from non-boostable requirements. If a skill gap is small (≤4 levels), mention that it *may* be boostable (stew / spicy stew / dwarven rock cake / etc.) as a caveat rather than asserting it.
 - **Combat / Quest-points aren't real skills.** The `Quest` row in the skill table from `requirements` is Quest Points. Surface it separately from skill levels — don't tell the user to "train Quest to 180."
