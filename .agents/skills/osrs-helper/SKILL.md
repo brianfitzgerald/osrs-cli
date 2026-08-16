@@ -1,17 +1,11 @@
 ---
 name: osrs-helper
-description: Plan an optimal path for an Old School RuneScape goal or look up live Grand Exchange prices. Use when the user asks what a player should do next, how to complete a quest, what's blocking them, how to efficiently reach a goal, or what an item currently costs. Pulls live player state, quest requirements, and item prices via the `osrs-cli` tool in this repo.
+description: Plan an optimal path for an Old School RuneScape goal, evaluate AFK or active money makers, or look up live Grand Exchange prices. Use when the user asks what a player should do next, how to complete a quest, what blocks a goal, how to make or budget money, what to do while working, or what an item currently costs. Pulls live player state, quest requirements, Wiki money-making guides, and item prices via the `osrs-cli` tool in this repo.
 ---
 
 # OSRS goal planner
 
 You have access to the `osrs-cli` command in this repository, which reads live player data from Wise Old Man + WikiSync, quest requirements from the OSRS Wiki, and live Grand Exchange prices from the OSRS Wiki prices API. Use it instead of guessing from memory when the CLI can provide current data.
-
-## When to invoke this skill
-
-Triggers: the user mentions an OSRS player name alongside a goal, asks what to do next, asks how to reach a quest/skill/diary/unlock, asks what's blocking them, asks for an optimal ordering of content, or asks for a current Grand Exchange item price.
-
-Do NOT invoke for generic meta discussion or drop tables. Item prices are supported even when no player is specified.
 
 ## The CLI
 
@@ -31,6 +25,8 @@ All commands run with `uv run osrs-cli <...>` from the repo root. Cached for 300
 Quest names are wiki page titles. Redirects are followed, so "Dragon Slayer 1" will resolve to "Dragon Slayer I", but prefer the canonical name.
 
 Item names use exact, case-insensitive matching against the Wiki prices mapping. The output timestamps are Unix seconds. Treat `high` as the latest price paid by an instant buyer and `low` as the latest price accepted by an instant seller. If either side has no observed trade, its price and timestamp display as unavailable. Live prices are player-reported and may differ from the official guide price.
+
+For money-making, profit-budget, or AFK-income requests, read [references/money-making.md](references/money-making.md) completely before calculating or recommending methods.
 
 ## Recommended workflow
 
