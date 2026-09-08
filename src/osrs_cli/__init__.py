@@ -4,6 +4,7 @@ Usage:
     osrs-cli stats <username>       Show current skill levels + totals.
     osrs-cli activities <username>  Show activities (clues, bounty hunter, LMS...).
     osrs-cli player <username>      Full summary: skills + activities + bosses.
+    osrs-cli loadout <url-or-id>    Read a shared OSRS Wiki DPS Calculator loadout.
     osrs-cli price "<item name>"    Latest Grand Exchange high/low prices.
     osrs-cli wiki "<page title>"    Fetch an OSRS Wiki page as markdown.
     osrs-cli clear-cache            Drop locally cached responses.
@@ -25,11 +26,9 @@ from rich.table import Table
 
 from . import api
 from .api import OsrsApiClient
-from .runelite import RuneLiteSnapshotStore
 
 console = Console()
 client = OsrsApiClient()
-runelite_store = RuneLiteSnapshotStore()
 
 SKILL_ORDER = [
     "overall",
@@ -201,171 +200,6 @@ def _render_quests(data: dict, status: str = "all") -> None:
     console.print(table)
 
 
-def _runelite_status(snapshot: dict, container_name: str) -> dict:
-    container = (snapshot.get("containers") or {}).get(container_name)
-    if not isinstance(container, dict) or not container.get("observed_at"):
-        raise ValueError(f"RuneLite has not observed {container_name} for this account yet.")
-    account = snapshot.get("account") or {}
-    state = "logged in" if (snapshot.get("session") or {}).get("logged_in") else "logged out"
-    console.print(
-        f"[bold cyan]{account.get('username', '?')}[/bold cyan]  "
-        f"[dim]profile={account.get('profile_type', '?')} state={state} "
-        f"observed={container['observed_at']}[/dim]"
-    )
-    return container
-
-
-def _runelite_items_table(title: str, items: list[dict]) -> Table:
-    table = Table(title=title, header_style="bold magenta", expand=False)
-    table.add_column("Slot", justify="right", style="dim")
-    table.add_column("Item", style="cyan")
-    table.add_column("Quantity", justify="right")
-    table.add_column("Item ID", justify="right", style="dim")
-    for item in items:
-        table.add_row(
-            str(item.get("slot", "—")),
-            item.get("name") or "Unknown item",
-            _fmt(item.get("quantity")),
-            _fmt(item.get("id")),
-        )
-    if not items:
-        table.add_row("—", "[dim]no items[/dim]", "—", "—")
-    return table
-
-
-class RuneliteCli:
-    """Read local data from the OSRS CLI Exporter RuneLite plugin."""
-
-    def __init__(self, store: RuneLiteSnapshotStore | None = None) -> None:
-        self._store = store if store is not None else runelite_store
-
-    def list(self, json: bool = False):
-        """List available local RuneLite snapshots."""
-        snapshots = self._store.list_snapshots()
-        if json:
-            console.print_json(data=snapshots)
-            return
-
-        table = Table(title="RuneLite snapshots", header_style="bold magenta", expand=False)
-        table.add_column("Username", style="cyan")
-        table.add_column("Profile")
-        table.add_column("State")
-        table.add_column("Updated", style="dim")
-        for snapshot in snapshots:
-            account = snapshot.get("account") or {}
-            state = "logged in" if (snapshot.get("session") or {}).get("logged_in") else "logged out"
-            table.add_row(
-                account.get("username", "?"),
-                account.get("profile_type", "?"),
-                state,
-                snapshot.get("updated_at") or "—",
-            )
-        if not snapshots:
-            table.add_row("[dim]no snapshots[/dim]", "—", "—", "—")
-        console.print(table)
-
-    def snapshot(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show a complete local RuneLite snapshot."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        if json:
-            console.print_json(data=snapshot)
-            return
-        self.bank(username, profile_type)
-        self.inventory(username, profile_type)
-        self.gear(username, profile_type)
-        self.layouts(username, profile_type)
-
-    def bank(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the last observed personal bank."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("bank")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed bank for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "bank")
-        console.print(_runelite_items_table("Bank", container.get("items") or []))
-
-    def inventory(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the current or last observed inventory."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("inventory")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed inventory for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "inventory")
-        console.print(_runelite_items_table("Inventory", container.get("items") or []))
-
-    def gear(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show the current or last observed equipped gear."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        container = (snapshot.get("containers") or {}).get("equipment")
-        if json:
-            if not isinstance(container, dict) or not container.get("observed_at"):
-                raise ValueError("RuneLite has not observed equipment for this account yet.")
-            console.print_json(data=container)
-            return
-        container = _runelite_status(snapshot, "equipment")
-        table = _runelite_items_table("Equipment", container.get("items") or [])
-        table.columns[0].header = "Equipment slot"
-        console.print(table)
-
-    def layouts(
-        self,
-        username: str = "Cyberduck242",
-        profile_type: str | None = None,
-        json: bool = False,
-    ):
-        """Show named Bank Tags layouts."""
-        snapshot = self._store.get_snapshot(username, profile_type)
-        layouts = snapshot.get("layouts") or []
-        if json:
-            console.print_json(data=layouts)
-            return
-
-        account = snapshot.get("account") or {}
-        console.print(
-            f"[bold cyan]{account.get('username', '?')}[/bold cyan]  "
-            f"[dim]profile={account.get('profile_type', '?')} layouts={len(layouts)}[/dim]"
-        )
-        table = Table(title="Named bank layouts", header_style="bold magenta", expand=False)
-        table.add_column("Name", style="cyan")
-        table.add_column("Source")
-        table.add_column("Items", justify="right")
-        for layout in layouts:
-            table.add_row(
-                layout.get("name") or "?",
-                layout.get("source") or "?",
-                str(len(layout.get("items") or [])),
-            )
-        if not layouts:
-            table.add_row("[dim]no layouts[/dim]", "—", "0")
-        console.print(table)
-
-
 class OsrsCli:
     """osrs-cli — query Old School RuneScape player data and Grand Exchange prices.
 
@@ -375,6 +209,7 @@ class OsrsCli:
         player <username>        Summary: skills + activities + top bosses.
         full <username>          Everything: skills + activities + all bosses + quests.
         quests <username>        Quest completion (requires WikiSync RuneLite plugin).
+        loadout <url-or-id>      Read a shared OSRS Wiki DPS Calculator loadout.
         price <item>             Latest Grand Exchange instant-buy/sell prices.
         wiki <title>             Fetch an OSRS Wiki page rendered as markdown.
         clear-cache              Delete locally cached responses.
@@ -386,9 +221,6 @@ class OsrsCli:
     Example:
         osrs-cli player Cyberduck242
     """
-
-    def __init__(self) -> None:
-        self.runelite = RuneliteCli()
 
     def stats(self, username: str, force: bool = False, ttl: int = api.CACHE_TTL_SECONDS):
         """Show a player's current skill levels, XP, and ranks."""
@@ -472,6 +304,113 @@ class OsrsCli:
         table.add_row("Instant buy (high)", _fmt(data.get("high")), _fmt(data.get("high_time")))
         table.add_row("Instant sell (low)", _fmt(data.get("low")), _fmt(data.get("low_time")))
         console.print(table)
+
+    def loadout(
+        self,
+        source: str,
+        json: bool = False,
+        force: bool = False,
+        ttl: int = api.CACHE_TTL_SECONDS,
+    ):
+        """Show a shared OSRS Wiki DPS Calculator loadout."""
+        data = client.get_dps_loadout(source, force=force, ttl=ttl)
+        if json:
+            console.print_json(data=data)
+            return
+
+        cached = " [dim](cached)[/dim]" if data.get("_cached") else ""
+        console.print(
+            f"[bold cyan]DPS loadout {data['share_id']}[/bold cyan]  "
+            f"[dim]version={data.get('serializationVersion', '?')} {data['url']}[/dim]{cached}"
+        )
+
+        monster = data.get("monster") or {}
+        if monster:
+            version = f" ({monster['version']})" if monster.get("version") else ""
+            console.print(
+                f"[bold magenta]Target:[/bold magenta] {monster.get('name', '?')}{version}  "
+                f"[dim]npc_id={monster.get('id', '?')}[/dim]"
+            )
+
+        skill_labels = {
+            "atk": "Attack",
+            "str": "Strength",
+            "def": "Defence",
+            "hp": "Hitpoints",
+            "ranged": "Ranged",
+            "magic": "Magic",
+            "prayer": "Prayer",
+            "mining": "Mining",
+            "herblore": "Herblore",
+        }
+        slot_order = [
+            "head",
+            "cape",
+            "neck",
+            "ammo",
+            "weapon",
+            "body",
+            "shield",
+            "legs",
+            "hands",
+            "feet",
+            "ring",
+        ]
+
+        selected = data.get("selectedLoadout", 0)
+        for index, loadout in enumerate(data.get("loadouts") or []):
+            selected_label = " [green](selected)[/green]" if index == selected else ""
+            console.print(
+                f"\n[bold cyan]{loadout.get('name') or f'Loadout {index + 1}'}[/bold cyan]{selected_label}"
+            )
+
+            skills = loadout.get("skills") or {}
+            skills_table = Table(title="Skills", header_style="bold magenta", expand=False)
+            skills_table.add_column("Skill", style="cyan")
+            skills_table.add_column("Level", justify="right")
+            for key, label in skill_labels.items():
+                if key in skills:
+                    skills_table.add_row(label, str(skills[key]))
+            console.print(skills_table)
+
+            equipment = loadout.get("equipment") or {}
+            equipment_table = Table(title="Equipment", header_style="bold magenta", expand=False)
+            equipment_table.add_column("Slot", style="cyan")
+            equipment_table.add_column("Item")
+            equipment_table.add_column("Item ID", justify="right", style="dim")
+            for slot in slot_order:
+                item = equipment.get(slot)
+                if isinstance(item, dict):
+                    equipment_table.add_row(slot.capitalize(), item.get("name", "?"), _fmt(item.get("id")))
+            if not equipment_table.rows:
+                equipment_table.add_row("—", "[dim]no equipment[/dim]", "—")
+            console.print(equipment_table)
+
+            style = loadout.get("style") or {}
+            spell = loadout.get("spell")
+            spell_name = spell.get("name") if isinstance(spell, dict) else spell
+            prayers = [
+                prayer.get("name", "?") if isinstance(prayer, dict) else str(prayer)
+                for prayer in (loadout.get("prayers") or [])
+            ]
+            buffs = loadout.get("buffs") or {}
+            settings_table = Table(title="Combat settings", header_style="bold magenta", expand=False)
+            settings_table.add_column("Setting", style="cyan")
+            settings_table.add_column("Value")
+            settings_table.add_row(
+                "Style",
+                " / ".join(
+                    str(value)
+                    for value in (style.get("name"), style.get("type"), style.get("stance"))
+                    if value
+                )
+                or "—",
+            )
+            settings_table.add_row("Spell", str(spell_name or "—"))
+            settings_table.add_row("Prayers", ", ".join(prayers) or "—")
+            settings_table.add_row("On Slayer task", "yes" if buffs.get("onSlayerTask") else "no")
+            settings_table.add_row("In Wilderness", "yes" if buffs.get("inWilderness") else "no")
+            console.print(settings_table)
 
     def requirements(
         self,

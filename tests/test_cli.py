@@ -107,6 +107,54 @@ def test_price_command_renders_live_prices(capture_console, mocker):
     assert "(cached)" in out
 
 
+def test_loadout_command_renders_shared_setup(capture_console, mocker):
+    mocker.patch(
+        "osrs_cli.client.get_dps_loadout",
+        return_value={
+            "share_id": "PoetsIslesSteel",
+            "url": "https://dps.osrs.wiki?id=PoetsIslesSteel",
+            "serializationVersion": 10,
+            "selectedLoadout": 0,
+            "monster": {"id": 415, "name": "Abyssal demon", "version": "Standard"},
+            "loadouts": [
+                {
+                    "name": "Cyberduck242",
+                    "skills": {"ranged": 76, "magic": 61},
+                    "equipment": {
+                        "weapon": {"id": 1405, "name": "Mystic air staff"},
+                        "body": {"id": 10386, "name": "Saradomin d'hide body"},
+                    },
+                    "style": {"name": "Bash", "type": "crush", "stance": "Accurate"},
+                    "spell": None,
+                    "prayers": [],
+                    "buffs": {"onSlayerTask": True, "inWilderness": False},
+                }
+            ],
+            "_cached": True,
+        },
+    )
+
+    cli.OsrsCli().loadout("PoetsIslesSteel")
+
+    out = capture_console.getvalue()
+    assert "PoetsIslesSteel" in out and "version=10" in out and "(cached)" in out
+    assert "Cyberduck242" in out and "selected" in out
+    assert "Abyssal demon" in out and "npc_id=415" in out
+    assert "Ranged" in out and "76" in out and "Magic" in out and "61" in out
+    assert "Mystic air staff" in out and "Saradomin d'hide body" in out
+    assert "Bash / crush / Accurate" in out
+    assert "On Slayer task" in out and "yes" in out
+
+
+def test_loadout_command_prints_json(capture_console, mocker):
+    data = {"share_id": "PoetsIslesSteel", "loadouts": [], "_cached": False}
+    mocker.patch("osrs_cli.client.get_dps_loadout", return_value=data)
+
+    cli.OsrsCli().loadout("PoetsIslesSteel", json=True)
+
+    assert '"share_id": "PoetsIslesSteel"' in capture_console.getvalue()
+
+
 def test_wiki_command_prints_title_url_and_rendered_markdown(capture_console, mocker):
     mocker.patch(
         "osrs_cli.client.get_wiki_page",

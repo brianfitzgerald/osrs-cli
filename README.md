@@ -3,7 +3,8 @@
 A CLI for querying Old School RuneScape player data and live Grand Exchange
 prices via the [Wise Old Man](https://docs.wiseoldman.net/api),
 [WikiSync](https://sync.runescape.wiki/), and
-[OSRS Wiki prices](https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices) APIs.
+[OSRS Wiki prices](https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices) APIs. It can also
+read shared [OSRS Wiki DPS Calculator](https://dps.osrs.wiki/) loadouts.
 
 Designed to be used with LLMs / agent harnesses.
 
@@ -16,11 +17,10 @@ Designed to be used with LLMs / agent harnesses.
 | `player <username>` | Summary: skills + activities + top bosses. |
 | `full <username>` | Everything: skills + activities + all bosses + quests. |
 | `quests <username>` | Quest completion (via WikiSync). `--status all\|complete\|in-progress\|not-started`. |
+| `loadout <url-or-id>` | Read a shared OSRS Wiki DPS Calculator loadout. Add `--json` for structured output. |
 | `requirements "<quest>"` | Skill + quest prerequisites for a quest, scraped from the OSRS Wiki. |
 | `price "<item name>"` | Latest Grand Exchange instant-buy and instant-sell prices. |
 | `wiki "<page title>"` | Fetch an OSRS Wiki page and render its content as markdown. |
-| `runelite snapshot [username]` | Local bank, inventory, equipment, and Bank Tags layouts. |
-| `runelite bank\|inventory\|gear\|layouts [username]` | Read one part of a local RuneLite snapshot. |
 | `clear-cache` | Delete locally cached API responses. |
 
 > Quests note: the OSRS hiscores don't expose quest completion, so Wise Old
@@ -47,11 +47,11 @@ uv run osrs-cli stats --help
 uv run osrs-cli stats Cyberduck242
 uv run osrs-cli activities Cyberduck242
 uv run osrs-cli player Cyberduck242 --force
+uv run osrs-cli loadout 'https://dps.osrs.wiki?id=PoetsIslesSteel'
+uv run osrs-cli loadout PoetsIslesSteel --json
 uv run osrs-cli requirements "While Guthix Sleeps"
 uv run osrs-cli price "Abyssal whip"
 uv run osrs-cli wiki "Tormented Demon"
-uv run osrs-cli runelite snapshot Cyberduck242
-uv run osrs-cli runelite bank Cyberduck242 --json
 uv run osrs-cli clear-cache
 ```
 
@@ -61,21 +61,6 @@ Responses are cached under `~/.cache/osrs-cli/` for 5 minutes by default.
 mapping endpoint. It reports the latest instant-buy (high) and instant-sell
 (low) price with each trade's Unix timestamp. These are live player-reported
 trades and may differ from the official Grand Exchange guide price.
-
-### RuneLite snapshots
-
-Install [OSRS CLI Exporter](https://github.com/brianfitzgerald/osrs-cli-runelite)
-from the RuneLite Plugin Hub to read local account items. The plugin writes
-versioned JSON files under `~/.runelite/osrs-cli/snapshots/`. It does not open a
-network port or upload the data.
-
-Open the standard personal bank once so the plugin can record it. Bank data is
-the last observed complete bank. Inventory and equipment are the last states
-written by the plugin. Commands show the observation time and RuneLite login
-state. Add `--json` to any RuneLite subcommand for structured output. If the
-same character has more than one game profile, select one with
-`--profile-type STANDARD`, `--profile-type DEADMAN`, or the displayed profile
-type.
 
 ### Wiki page rendering
 

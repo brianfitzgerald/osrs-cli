@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -15,6 +17,7 @@ BASE_URL = "https://api.wiseoldman.net/v2"
 WIKISYNC_URL = "https://sync.runescape.wiki/runelite/player/{username}/STANDARD"
 WIKI_API_URL = "https://oldschool.runescape.wiki/api.php"
 PRICES_API_URL = "https://prices.runescape.wiki/api/v1/osrs"
+DPS_SHORTLINK_URL = "https://tools.runescape.wiki/osrs-dps/shortlink"
 CACHE_DIR = Path.home() / ".cache" / "osrs-cli"
 CACHE_TTL_SECONDS = 300
 RATE_LIMIT_WINDOW = 60
@@ -112,6 +115,63 @@ class OsrsApiClient:
         return count
 
     # ---- HTTP fetchers -------------------------------------------------
+
+    def get_dps_loadout(self, source: str, *, force: bool = False, ttl: int | None = None) -> dict[str, Any]:
+        """Fetch a shared OSRS Wiki DPS Calculator loadout."""
+        ttl = self.default_ttl if ttl is None else ttl
+        source = source.strip()
+        if not source:
+            raise ValueError("DPS loadout URL or share ID cannot be empty.")
+
+        if "://" in source:
+            parsed = urlparse(source)
+            host = (parsed.hostname or "").casefold()
+            allowed_paths = {
+                "dps.osrs.wiki": {"", "/"},
+                "tools.runescape.wiki": {"/osrs-dps", "/osrs-dps/", "/osrs-dps/shortlink"},
+            }
+            if host not in allowed_paths or parsed.path not in allowed_paths[host]:
+                raise ValueError("URL must be an OSRS Wiki DPS Calculator share link.")
+            share_id = (parse_qs(parsed.query).get("id") or [""])[0]
+        else:
+            share_id = source
+
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", share_id):
+            raise ValueError("Invalid or missing DPS Calculator share ID.")
+
+        key = f"dps_loadout_{share_id}"
+        if not force:
+            cached = self._read_cache(key, ttl)
+            if cached is not None:
+                cached["_cached"] = True
+                return cached
+
+        self._check_rate_limit()
+        headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+        resp = requests.get(
+            DPS_SHORTLINK_URL,
+            params={"id": share_id},
+            headers=headers,
+            timeout=15,
+        )
+        if resp.status_code in {400, 404}:
+            raise ValueError(f"DPS Calculator loadout '{share_id}' was not found.")
+        if resp.status_code == 429:
+            raise RateLimitError("DPS Calculator returned 429 — you are rate limited.")
+        resp.raise_for_status()
+        payload = resp.json()
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict) or not isinstance(data.get("loadouts"), list):
+            raise ValueError("DPS Calculator returned an invalid loadout payload.")
+
+        result: dict[str, Any] = {
+            **data,
+            "share_id": share_id,
+            "url": f"https://dps.osrs.wiki?id={share_id}",
+        }
+        self._write_cache(key, result)
+        result["_cached"] = False
+        return result
 
     def get_item_price(self, item: str, *, force: bool = False, ttl: int | None = None) -> dict[str, Any]:
         """Fetch the latest Grand Exchange prices for an item by name."""

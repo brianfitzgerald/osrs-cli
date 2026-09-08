@@ -23,9 +23,10 @@ Package + env managed by `uv` (Python 3.14+).
 
 Two-module package in `src/osrs_cli/`:
 
-- `api.py` — HTTP client layer. Wraps two upstream services:
+- `api.py` — HTTP client layer. Wraps upstream OSRS services:
   - Wise Old Man v2 (`api.wiseoldman.net`) for player skills/activities/bosses via `get_player`.
   - WikiSync (`sync.runescape.wiki`) for quest completion via `get_quests`. WikiSync data only exists for players who have run the RuneLite WikiSync plugin — a 404/400 surfaces as a `ValueError` with a user-facing message.
+  - OSRS Wiki DPS Calculator shortlinks (`tools.runescape.wiki/osrs-dps/shortlink`) for shared loadouts via `get_dps_loadout`.
   - On-disk JSON cache under `~/.cache/osrs-cli/` (default TTL 300s; override with `--ttl`, bypass with `--force`). Cache files are keyed by a sanitized `{kind}_{username}` name.
   - Cross-invocation rate limiting: sliding window of 20 requests / 60s persisted in `~/.cache/osrs-cli/_rate.json`. Exceeding it raises `RateLimitError` before the HTTP call. `clear_cache()` deliberately skips `_rate.json`.
   - The `_cached` boolean is injected into returned dicts so the renderer can show a `(cached)` hint.

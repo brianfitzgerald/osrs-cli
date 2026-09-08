@@ -56,6 +56,75 @@ def test_get_player_404_raises_value_error(client, mocker):
         client.get_player("missing")
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        "PoetsIslesSteel",
+        "https://dps.osrs.wiki?id=PoetsIslesSteel",
+        "https://dps.osrs.wiki/?id=PoetsIslesSteel",
+        "https://tools.runescape.wiki/osrs-dps?id=PoetsIslesSteel",
+        "https://tools.runescape.wiki/osrs-dps/shortlink?id=PoetsIslesSteel",
+    ],
+)
+def test_get_dps_loadout_accepts_share_id_and_urls(client, mocker, source):
+    payload = {
+        "data": {
+            "serializationVersion": 10,
+            "loadouts": [{"name": "Cyberduck242"}],
+            "selectedLoadout": 0,
+        }
+    }
+    get = mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, payload))
+
+    data = client.get_dps_loadout(source)
+
+    assert data["share_id"] == "PoetsIslesSteel"
+    assert data["url"] == "https://dps.osrs.wiki?id=PoetsIslesSteel"
+    assert data["loadouts"][0]["name"] == "Cyberduck242"
+    assert data["_cached"] is False
+    assert get.call_args.args == (api.DPS_SHORTLINK_URL,)
+    assert get.call_args.kwargs["params"] == {"id": "PoetsIslesSteel"}
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        " ",
+        "https://dps.osrs.wiki/",
+        "https://example.com/?id=PoetsIslesSteel",
+        "https://tools.runescape.wiki/not-osrs-dps?id=PoetsIslesSteel",
+        "bad/id",
+    ],
+)
+def test_get_dps_loadout_rejects_invalid_sources(client, source):
+    with pytest.raises(ValueError, match="DPS|Invalid"):
+        client.get_dps_loadout(source)
+
+
+@pytest.mark.parametrize("status", [400, 404])
+def test_get_dps_loadout_missing_raises_value_error(client, mocker, status):
+    mocker.patch("osrs_cli.api.requests.get", return_value=_resp(status))
+    with pytest.raises(ValueError, match="not found"):
+        client.get_dps_loadout("MissingLoadout")
+
+
+def test_get_dps_loadout_rejects_invalid_payload(client, mocker):
+    mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, {"data": {}}))
+    with pytest.raises(ValueError, match="invalid loadout payload"):
+        client.get_dps_loadout("BrokenLoadout")
+
+
+def test_get_dps_loadout_caches_and_force_bypasses(client, mocker):
+    payload = {"data": {"loadouts": []}}
+    get = mocker.patch("osrs_cli.api.requests.get", return_value=_resp(200, payload))
+
+    client.get_dps_loadout("PoetsIslesSteel")
+    assert client.get_dps_loadout("PoetsIslesSteel")["_cached"] is True
+    client.get_dps_loadout("PoetsIslesSteel", force=True)
+
+    assert get.call_count == 2
+
+
 def test_get_item_price_resolves_name_fetches_latest_and_caches(client, mocker):
     get = mocker.patch(
         "osrs_cli.api.requests.get",
