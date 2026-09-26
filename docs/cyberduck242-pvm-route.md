@@ -7,7 +7,7 @@ Account check: 2026-09-24. Wise Old Man and WikiSync supplied skills and quests.
 | Goal | State | Next step |
 | --- | --- | --- |
 | Fight Caves | 78 Ranged, 70 Prayer, Piety unlocked, blowpipe, blessed d'hide, fury, Ava's accumulator | Attempt now |
-| Amoxliatl | The Heart of Darkness is in progress | Finish the quest |
+| Amoxliatl | The Heart of Darkness is in progress | Optional after the first ToA run |
 | Solo Tombs of Amascut | Beneath Cursed Sands is incomplete | Do its quest chain |
 | While Guthix Sleeps | 126 of 180 Quest Points; five direct prerequisite quests remain | Do required quests and skill gates |
 | Tormented demons | Locked by While Guthix Sleeps | Prepare Arclight during the quest route |
@@ -17,20 +17,113 @@ The [corrected DPS setup](https://dps.osrs.wiki?id=PheasantSlayersMeticulous) sh
 
 ## Active content
 
-1. [ ] Get the fire cape now. Use the blowpipe and blessed d'hide. Check scales and darts. Bring ranging potions, Saradomin brews, super restores, and prayer potions. Practice Jad's Ranged and Magic cues. Switch prayer first, then take one action, including when tagging healers. Buy supplies before gear upgrades. Ranged 80 is optional, not a gate. [Fight Caves strategy](https://oldschool.runescape.wiki/w/TzHaar_Fight_Cave/Strategies)
-2. [ ] Finish the in-progress The Heart of Darkness. This gives 2 Quest Points, opens Amoxliatl, and opens Frost Crabs for low-attention Magic training. Try Amoxliatl for boss practice and income. The quest is not a Zulrah requirement. [The Heart of Darkness](https://oldschool.runescape.wiki/w/The_Heart_of_Darkness) · [Amoxliatl](https://oldschool.runescape.wiki/w/Amoxliatl)
-3. [ ] Farm Moons of Peril for cash and boss practice between unlocks. This is active combat. The quest is complete and the account has four Lunar Chests. Use food and potions made inside. Use stab against Eclipse, crush against Blue, and slash against Blood. Track loot and time across five full chest runs before using any gp/hour estimate. [Moons strategy](https://oldschool.runescape.wiki/w/Moons_of_Peril/Strategies) · [Moons money guide](https://oldschool.runescape.wiki/w/Money_making_guide/Moons_of_Peril)
-4. [ ] Train Firemaking from 52 to 55. Complete Prince Ali Rescue -> Icthlarin's Little Helper -> Contact! -> Beneath Cursed Sands. This opens ToA, gives a keris partisan, and gives 50,000 Agility XP toward While Guthix Sleeps. Complete A Tail of Two Cats after Icthlarin's Little Helper for the WGS chain; put its choice lamps into Herblore. [Beneath Cursed Sands](https://oldschool.runescape.wiki/w/Beneath_Cursed_Sands)
-5. [ ] Build the solo ToA setup below, then try raid level 0. Add invocations after clean clears. The Wiki suggests 70 Magic; the account has 67. Train the three levels for a smoother run if convenient. Do not wait for 75 Magic or a fang to enter. [ToA strategy](https://oldschool.runescape.wiki/w/Tombs_of_Amascut/Strategies)
-6. [ ] At 75 Magic, consider a trident and learn Zulrah. Regicide is complete. The trident also upgrades ToA. Keep Amoxliatl and Moons as other standalone boss options. Do Song of the Elves for Gauntlet only when you want that larger quest route. [Zulrah strategy](https://oldschool.runescape.wiki/w/Zulrah/Strategies)
-7. [ ] Complete The Hand in the Sand. Its 9,000 Crafting XP clears the 61 Crafting requirement for Lunar Diplomacy. Complete Eadgar's Ruse before buying Herblore XP.
-8. [ ] Complete Family Crest, then train Smithing from 50 to 55 with goldsmith gauntlets at Blast Furnace. Complete Shield of Arrav, the in-progress Temple of Ikov and Romeo & Juliet, Below Ice Mountain, What Lies Below, Creature of Fenkenstrain, Garden of Tranquillity, then Defender of Varrock.
-9. [ ] Complete Lunar Diplomacy -> Dream Mentor, Recruitment Drive -> Wanted!, and the in-progress The Lost Tribe. The Path of Glouphrie, Fight Arena, Temple of the Eye, Tears of Guthix, and Nature Spirit are already complete. [WGS requirements](https://oldschool.runescape.wiki/w/While_Guthix_Sleeps)
-10. [ ] Complete The Golem -> Shadow of the Storm for Darklight. Get three ancient shards from the Catacombs of Kourend and make Arclight for tormented demons. [Arclight](https://oldschool.runescape.wiki/w/Arclight)
-11. [ ] Finish the WGS skill gates: 72 Thieving, 66 Agility, 65 Farming, and 65 Herblore. Use active blackjacking for Thieving. After the Beneath Cursed Sands reward, about 112k Agility XP remains; use Seers' rooftop. Keep tree runs going. Make potions for the Herblore XP left after quest rewards and lamps.
-12. [ ] Reach 180 Quest Points. The required WGS and ToA chains add about 35 points; The Heart of Darkness adds 2 more. Recheck the quest log, then get about 17 more points from short or useful quests. Start with the in-progress Doric's Quest, Fairytale II, Monkey Madness I, and Roving Elves; use Vampyre Slayer, The Corsair Curse, Monk's Friend, and Elemental Workshop I as needed. Desert Treasure I is a longer option that unlocks Ancient Magicks. Stop at 180. [WGS requirements](https://oldschool.runescape.wiki/w/While_Guthix_Sleeps)
-13. [ ] Complete While Guthix Sleeps. Start tormented demons in a single-demon room with Arclight and a Ranged switch. Rare drops drive much of their expected value; Moons is a steadier cash option. [Tormented demon strategy](https://oldschool.runescape.wiki/w/Tormented_Demon/Strategies)
-14. [ ] Advance solo ToA toward raid level 150 after clean Entry Mode runs. Add invocations one at a time. Buy an Osmumten's fang when boss income supports it. On 2026-09-24, its instant-buy price was about 17.5m gp. [ToA modes](https://oldschool.runescape.wiki/w/Tombs_of_Amascut)
+### 1. Fight Caves
+
+- [ ] Check the blowpipe's scales and darts.
+- [ ] Pack ranging potions, Saradomin brews, super restores, and prayer potions.
+- [ ] Practice Jad's Ranged and Magic cues. At Jad, switch prayer before each other action.
+- [ ] Complete Fight Caves with the owned blowpipe and blessed d'hide. Tag healers one at a time. Ranged 80 is optional. [Fight Caves strategy](https://oldschool.runescape.wiki/w/TzHaar_Fight_Cave/Strategies)
+
+### 2. Optional cash between unlocks
+
+- [ ] Bring stab, crush, and slash weapons to Moons of Peril. Use stab on Eclipse, crush on Blue, and slash on Blood.
+- [ ] Make food and moonlight potions inside Neypotzli.
+- [ ] Complete five full Lunar Chest runs. The account has four chests so far.
+- [ ] Record loot and time from those runs before using a gp/hour estimate. [Moons strategy](https://oldschool.runescape.wiki/w/Moons_of_Peril/Strategies) · [Moons money guide](https://oldschool.runescape.wiki/w/Money_making_guide/Moons_of_Peril)
+
+### 3. Unlock ToA
+
+- [ ] Train Firemaking from 52 to 55.
+- [ ] Complete Prince Ali Rescue.
+- [ ] Complete Icthlarin's Little Helper.
+- [ ] Complete Contact!
+- [ ] Complete Beneath Cursed Sands. Claim the keris partisan and 50,000 Agility XP. This opens ToA. [Beneath Cursed Sands](https://oldschool.runescape.wiki/w/Beneath_Cursed_Sands)
+
+### 4. First solo ToA
+
+- [ ] Check the shared gear list below against the bank.
+- [ ] Get a dragon sword if missing.
+- [ ] Get a dragon dagger if missing.
+- [ ] Get a warped sceptre if missing.
+- [ ] Get mystic robe top and bottom if missing.
+- [ ] Charge the sceptre.
+- [ ] Check the blowpipe's scales and darts again.
+- [ ] Check the bank for a dragon defender.
+- [ ] Get a dragon defender before repeated runs if missing.
+- [ ] Pack the first-run inventory listed below.
+- [ ] Optionally train Magic from 67 to 70. The Wiki suggests 70; 75 is not needed to start.
+- [ ] Enter solo at raid level 0 with no attempt or time limits.
+- [ ] Learn Zebak -> Kephri -> Akkha -> Ba-Ba.
+- [ ] Take Power at the first supply choice and Life at the second.
+- [ ] Complete one Entry Mode run. Add invocations after clean clears. [ToA strategy](https://oldschool.runescape.wiki/w/Tombs_of_Amascut/Strategies)
+
+### 5. Optional standalone bosses
+
+- [ ] Finish the in-progress The Heart of Darkness if you want Amoxliatl, Frost Crabs, or its 2 Quest Points toward WGS. It is not required for ToA or Zulrah.
+- [ ] Try one Amoxliatl kill for boss practice. Use Moons as the default cash option. [Amoxliatl](https://oldschool.runescape.wiki/w/Amoxliatl)
+- [ ] Train Magic to 75 when ready for a trident.
+- [ ] Buy or check a trident at 75 Magic.
+- [ ] Try Zulrah. Regicide is complete. [Zulrah strategy](https://oldschool.runescape.wiki/w/Zulrah/Strategies)
+
+### 6. WGS quests
+
+The Path of Glouphrie, Fight Arena, Temple of the Eye, Tears of Guthix, and Nature Spirit are complete. Finish the remaining [WGS requirements](https://oldschool.runescape.wiki/w/While_Guthix_Sleeps) in dependency order.
+
+- [ ] Complete A Tail of Two Cats after Icthlarin's Little Helper. Put its choice lamps into Herblore.
+- [ ] Complete The Hand in the Sand. Its 9,000 Crafting XP clears 61 Crafting for Lunar Diplomacy.
+- [ ] Complete Eadgar's Ruse before buying Herblore XP.
+- [ ] Complete Family Crest to get goldsmith gauntlets.
+- [ ] Train Smithing from 50 to 55 at Blast Furnace.
+- [ ] Complete Shield of Arrav.
+- [ ] Finish the in-progress Temple of Ikov.
+- [ ] Finish the in-progress Romeo & Juliet.
+- [ ] Complete Below Ice Mountain.
+- [ ] Complete What Lies Below.
+- [ ] Complete Creature of Fenkenstrain.
+- [ ] Complete Garden of Tranquillity.
+- [ ] Complete Defender of Varrock.
+- [ ] Complete Lunar Diplomacy.
+- [ ] Complete Dream Mentor.
+- [ ] Complete Recruitment Drive.
+- [ ] Complete Wanted!
+- [ ] Finish the in-progress The Lost Tribe.
+
+### 7. WGS skills and Quest Points
+
+- [ ] Train Thieving from 64 to 72. Blackjacking is an active option.
+- [ ] Train Agility from 62 to 66. The Beneath Cursed Sands reward leaves about 112k XP; use Seers' rooftop for the rest.
+- [ ] Raise Farming from 62 to 65 with tree runs.
+- [ ] Raise Herblore from 62 to 65 after quest rewards and lamps.
+- [ ] Refresh WikiSync and check the Quest Point total after the required chains. About 19 points may remain, or about 17 if The Heart of Darkness is complete.
+- [ ] Finish the in-progress Doric's Quest if more points are needed.
+- [ ] Finish the in-progress Fairytale II if more points are needed.
+- [ ] Finish the in-progress Monkey Madness I if more points are needed.
+- [ ] Finish the in-progress Roving Elves if more points are needed.
+- [ ] Complete Vampyre Slayer if more points are needed.
+- [ ] Complete The Corsair Curse if more points are needed.
+- [ ] Complete Monk's Friend if more points are needed.
+- [ ] Complete Elemental Workshop I if more points are needed.
+- [ ] If still below 180, select more short quests. Desert Treasure I is a longer option that unlocks Ancient Magicks.
+
+### 8. Tormented demons
+
+- [ ] Complete The Golem.
+- [ ] Complete Shadow of the Storm to get Darklight.
+- [ ] Get three ancient shards from the Catacombs of Kourend.
+- [ ] Make Arclight. [Arclight](https://oldschool.runescape.wiki/w/Arclight)
+- [ ] Confirm 180 Quest Points and every WGS skill and quest requirement in game.
+- [ ] Complete While Guthix Sleeps.
+- [ ] Bring Arclight and a Ranged switch to a single-demon room.
+- [ ] Get the first tormented demon kill. Use Moons when you want steadier income. [Tormented demon strategy](https://oldschool.runescape.wiki/w/Tormented_Demon/Strategies)
+
+### 9. Progress ToA
+
+- [ ] Repeat Entry Mode until clears are consistent.
+- [ ] Get a trident at 75 Magic if it is still missing.
+- [ ] Add one invocation at a time toward raid level 150.
+- [ ] Add a crossbow with ruby bolts (e) if Ranged bosses are slow.
+- [ ] Buy an Osmumten's fang when boss income supports it. Its 2026-09-24 instant-buy price was about 17.5m gp.
+- [ ] Complete a solo raid at level 150. [ToA modes](https://oldschool.runescape.wiki/w/Tombs_of_Amascut)
 
 ### Solo ToA setup
 
@@ -52,8 +145,11 @@ Treat raid level 0 as practice, not the main cash source. After clean Entry Mode
 
 ### Short active breaks
 
-- [ ] Plant trees and fruit trees until 65 Farming. Use a short break for herb runs when patches are ready. The Vault route is Falador, Catherby, Ardougne, Hosidius, Ortus Farm, and Morytania. Bring magic secateurs, spade, seed dibber, rake, and ultracompost or a bottomless bucket. Treat herb sales as a supply fund. [Farming runs](https://oldschool.runescape.wiki/w/Farming_runs)
-- [ ] Do birdhouse runs on the same breaks if convenient. Bring four logs at your birdhouse tier, hammer, chisel, seeds, and a Digsite pendant. Bring four clockworks only when placing houses from scratch. Hunter already meets the WGS requirement. [Bird houses](https://oldschool.runescape.wiki/w/Bird_house_%28item%29)
+- [ ] Start tree and fruit-tree runs for 65 Farming.
+- [ ] Pack magic secateurs, spade, seed dibber, rake, and ultracompost or a bottomless bucket for herb runs.
+- [ ] Harvest and replant herbs at Falador, Catherby, Ardougne, Hosidius, Ortus Farm, and Morytania when ready. Use sales to fund supplies. [Farming runs](https://oldschool.runescape.wiki/w/Farming_runs)
+- [ ] Pack four logs at your birdhouse tier, hammer, chisel, seeds, and a Digsite pendant.
+- [ ] Place or refill four birdhouses during a break. Bring clockworks only when placing houses from scratch. Hunter already meets the WGS requirement. [Bird houses](https://oldschool.runescape.wiki/w/Bird_house_%28item%29)
 
 ## AFK content
 
@@ -62,23 +158,29 @@ Choose a task by how often work lets you check the game. A crab reset still need
 | Task | Attention | Goal served |
 | --- | --- | --- |
 | Ammonite Crabs with cheap Ranged ammo | About every 10 minutes to reset aggression | Optional 78 -> 80 Ranged and Hitpoints for Fight Caves |
-| Frost Crabs with Fire Blast, after The Heart of Darkness | About every 10 minutes to reset aggression | 67 -> 75 Magic for trident, Zulrah, and ToA |
+| Frost Crabs with Fire Blast, if The Heart of Darkness is done | About every 10 minutes to reset aggression | Optional 67 -> 75 Magic for trident, Zulrah, and ToA |
 | Sulphur nagua melee | Shorter checks for Prayer and supplies | Strength 76 -> 80, then Attack 76 -> 80; some income |
 | Shooting Stars | Longer AFK fallback | Small cash return; no direct boss unlock |
 
-- [ ] For Fight Caves prep, train Ranged at Ammonite Crabs only if you want more room for error. Bone Voyage is complete. Use cheap ammo to save blowpipe scales and darts for the attempt. Crabs lose aggression after about 10 minutes; walk away and back to reset it. [Ranged training](https://oldschool.runescape.wiki/w/Pay-to-play_Ranged_training)
-- [ ] After The Heart of Darkness, cast Fire Blast at Frost Crabs. Their fire weakness makes this a useful Magic route to 75. Reset aggression about every 10 minutes. Move to trident and Zulrah practice when ready. [Frost Crabs](https://oldschool.runescape.wiki/w/Frost_Crab) · [Gemstone Crab strategy](https://oldschool.runescape.wiki/w/Gemstone_Crab/Strategies)
-- [ ] For melee XP, use sulphur nagua in Cam Torum when you can check more often. Perilous Moons and the 48 Slayer gate are complete. The Vault suggests sulphur blades, helm of Neitiznot, fury, best owned melee body and legs, combat bracelet or better gloves, and rune boots. Use the free moonlight potions on site. Watch Prayer and the nagua special; this needs more input than crabs. [Sulphur nagua](https://oldschool.runescape.wiki/w/Sulphur_nagua)
+- [ ] Optional Fight Caves prep: equip a cheap Ranged weapon and ammo for Ammonite Crabs. Bone Voyage is complete. Save blowpipe scales and darts for the attempt.
+- [ ] Optional: train Ranged from 78 to 80 at Ammonite Crabs. Reset aggression about every 10 minutes by walking away and back. [Ranged training](https://oldschool.runescape.wiki/w/Pay-to-play_Ranged_training)
+- [ ] If The Heart of Darkness is complete, bring Fire Blast runes to Frost Crabs.
+- [ ] Optional: train Magic toward 75 at Frost Crabs. Reset aggression about every 10 minutes. Do not delay ToA only for this training spot. [Frost Crabs](https://oldschool.runescape.wiki/w/Frost_Crab) · [Gemstone Crab strategy](https://oldschool.runescape.wiki/w/Gemstone_Crab/Strategies)
+- [ ] If work allows shorter checks, prepare sulphur blades, helm of Neitiznot, fury, best owned melee body and legs, combat bracelet or better gloves, and rune boots for sulphur nagua.
+- [ ] Optional: train Strength toward 80 at sulphur nagua, then Attack toward 80. Use free moonlight potions and check Prayer and the special attack often. Perilous Moons and the 48 Slayer gate are complete. [Sulphur nagua](https://oldschool.runescape.wiki/w/Sulphur_nagua)
 
 The Vault also lists Moons potion upgrades, Cam Torum mining, Motherlode Mine, barbarian fishing, cannonballs, and Giants' Foundry. Use these when supplies or cash are a problem. They do not need to delay the first Fight Caves attempt or the ToA unlock. Moons is active combat. Do not train Cooking 78, Herblore 66, Fishing 69, or Hunter 75 only for Moons before those unlocks.
 
 ## Checkpoints
 
 - [ ] Fire cape obtained.
-- [ ] The Heart of Darkness complete; first Amoxliatl kill.
+- [ ] Optional: The Heart of Darkness complete.
+- [ ] Optional: First Amoxliatl kill.
 - [ ] First solo Entry ToA clear.
-- [ ] 180 Quest Points and all WGS requirements complete in game.
-- [ ] WGS complete and first ten tormented demon kills logged.
+- [ ] 180 Quest Points.
+- [ ] All WGS requirements complete in game.
+- [ ] WGS complete.
+- [ ] First ten tormented demon kills logged.
 - [ ] Solo ToA raid level 150 clears are consistent.
 
 Prices and account state are dated snapshots. Check live prices before large purchases. Refresh WikiSync after each quest session.
